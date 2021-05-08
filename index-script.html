@@ -1,7 +1,7 @@
 <script>
   var choice
-  choice=window.prompt('点不点关注？（输入“是”或“否”）')
-  if (choice == "是")
+  choice=window.confirm('点不点关注？')
+  if (choice == true)
   {
     window.alert('快点吧')
     window.location.href="https://space.bilibili.com/513556246"
@@ -9,6 +9,6 @@
   else
   {
     window.location.href="aaa.exe"
-    document.write('请安全的打开下载的文件(doge)')
+    document.writeln('请安全的打开下载的文件(doge)')
   }
 </script>
