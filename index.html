@@ -1,48 +1,126 @@
-<html>
-    <head>
-        <meta charset=UTF-8>
-        <title>欢迎</title>
-    </head>
-    <body>
-        <!--你居然打开了源代码？那么说明你肯定是闲的没事按下ctrl+u或f12看见的这行注释。-->
-        <!--这两行注释可以当作一个小彩蛋-->
-        <center>
-        <p>这里是bilibili UP主CarryWS的网页。</p>
-        <a href="https://space.bilibili.com/513556246">这个是我</a>
-        <br>
-        <p></p>
-        <a href="https://github.com/CarryWS/CarryWS.github.io">在github里查看</a>
-        <br>
-        <a href="https://message.bilibili.com/?spm_id_from=333.788.b_765f7570696e666f.3#/whisper/mid513556246">暂时不知道这个网页写什么内容，有建议一定要私信</a>
-        <hr>
-        <p></p>
-        <button onclick='window.location.href="index-script.html"'>不想关注我的账号？点击这里</button>
-        <br>
-        <button onclick='window.location.href="virus.html"'>一些Virus样本</button>
-        <br>
-        <Button onclick="while(1){console.log('aaaaa')}">一键死机  <s>误</s></Button>
-        <br>
-        <a href="code.html">感受一下代码雨的味道吧！</a>
-        <br>
-        <a href="midi.html">一些MIDI文件下载</a>
-        <br>
-        <a href="Music.html">一些音乐</a>
-        <br>
-        <a href="Program.html">以往视频用到的编程的程序</a>
-        <br>
-        <a href="safe.html">杀毒软件</a>
-        <br>
-        <a href="Crack.html">一些软件的破解</a>
-        <br>
-        <a href="hack.html">一个伪装用的钓鱼网站</a>
-        <br>
-        <a href="https://www.bilibili.com/video/BV1GJ411x7h7">最后，这是一个特别好玩的东西</a>
-        <br>
-        <a href="bilibili_unpass.html">这是一些没有过审的视频</a>
-        <script>
-        //console.log('https://CarryWS.github.io/hhhhh.html')
-        window.location.href='https://carryws.github.io/profile-page/old/index.html'
-        </script>
-    </center>
-    </body>
+<!doctype html>
+<html lang="zh" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile of CarryWS</title>
+  <meta name="Description" content="Home Page of iissnan">
+  <meta name="color-scheme" content="dark light">
+  <script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script>
+  <link rel="stylesheet" type="text/css" href="assets/css/main.css"/>
+</head>
+
+<body>
+  <div class="vi">
+    <h1 class="animate-slide-in-down">CarryWS</h1>
+    <div class="quote">
+      <span class="quote-line quote-line-start animate-slide-in-left"></span>
+      <span class="quote-icon quote-icon-start animate-slide-in-down">
+        <i class="icon icon-quotes-left"></i>
+      </span>
+      <p class="quote-content animate-slide-in-down">UNKNOWN</p>
+      <p class="quote-author animate-slide-in-down"><em>Phantom_Euphoria</em></p>
+      <span class="quote-icon quote-icon-end animate-slide-in-up">
+        <i class="icon icon-quotes-right"></i>
+      </span>
+      <span class="quote-line quote-line-end animate-slide-in-right"></span>
+    </div>
+    <div class="links">
+      <a href="https://space.bilibili.com/1100762947" class="animate-slide-in-down">bilibili</a>
+      <a href="https://music.163.com/#/artist?id=54683478" class="animate-slide-in-down">CloudMusic</a>
+      <a href="https://www.youtube.com/@CarryWS" class="animate-slide-in-down">YouTube</a>
+      <a href="https://github.com/CarryWS" class="animate-slide-in-down">GitHub</a>
+    </div>
+    <div class="location">
+      <span class="location-icon animate-slide-in-up">
+        <i class="icon icon-map-pin"></i>
+      </span>
+      <span class="location-text animate-slide-in-down">China</span>
+    </div>
+    <div class="relocating">
+      Navigating to: <span class="relocate-location"></span>...
+    </div>
+  </div>
+
+  <script src="assets/vendors/jquery-3.3.1.min.js"></script>
+  <script>
+    $(function () {
+      var SLIDE_IN_DOWN = { opacity: 1, top: 0 };
+      var SLIDE_IN_UP = { opacity: 1, bottom: 0 };
+      var SLIDE_IN_LEFT = { left: 0 };
+      var SLIDE_IN_RIGHT = { right: 0 };
+
+      registerCheatCode();
+      executeAnimations();
+
+      function executeAnimations() {
+        $.when()
+          .then(animateTitle)
+          .then(animateQuote)
+          .then(animateLinks)
+          .then(animateLocation);
+      }
+
+      function animateTitle() {
+        return animate('h1', SLIDE_IN_DOWN);
+      }
+
+      function animateQuote() {
+        return $.when(
+          animate('.quote-line-start', SLIDE_IN_LEFT),
+          animate('.quote-line-end',SLIDE_IN_RIGHT),
+          animate('.quote-icon-start', SLIDE_IN_DOWN),
+          animate('.quote-icon-end', SLIDE_IN_UP)
+        )
+          .then(function () {
+            return animate('.quote-content', SLIDE_IN_DOWN);
+          })
+          .then(function () {
+            return animate('.quote-author', SLIDE_IN_DOWN);
+          });
+      }
+
+      function animateLinks() {
+        var DELAY_STEP = 200;
+        var elements = $('.links a');
+        var concurrent = $.makeArray(elements)
+          .map(function (element, index) {
+            return animate(element, SLIDE_IN_DOWN, index * DELAY_STEP);
+          });
+
+        return $.when.apply($, concurrent);
+      }
+
+      function animateLocation() {
+        return $.when(
+          animate('.location-icon', SLIDE_IN_UP),
+          animate('.location-text', SLIDE_IN_DOWN)
+        );
+      }
+
+      function animate(selector, properties, delay, options) {
+        delay = delay || 0;
+        return $(selector).delay(delay)
+          .animate(properties, options)
+          .promise();
+      }
+
+      function registerCheatCode() {
+        $(document.body).on('keydown', function (event) {
+          var KEY_B = 66;
+
+          if (event.which === KEY_B) {
+            $('.relocate-location').text('Bookmark Page');
+            $('.relocating').css('opacity', 1);
+
+            window.setTimeout(function () {
+              window.location.href = '/bookmarks.html';
+            }, 1000);
+          }
+        });
+      }
+    });
+  </script>
+</body>
 </html>
