@@ -204,7 +204,7 @@ a { color: #333; }
 /* DARK MODE
 /* ================================================= */
 @media (prefers-color-scheme: dark) {
-  html { background: #121621; }
+  html { background: black; }
   body { color: #6C7486; }
   ::selection { background: #222; color: #99A3BA; }
   h1 { color: #E4ECFA; }
