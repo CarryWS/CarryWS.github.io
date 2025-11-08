@@ -187,7 +187,7 @@ ul, ol { list-style: none; }
 
 /* LIGHT MODE
 /* ================================================= */
-html { background-color: white; }
+html { background-color: black; }
 body { color: #333; }
 ::selection { background: #222; color: white; }
 h1 { color: #222; }
