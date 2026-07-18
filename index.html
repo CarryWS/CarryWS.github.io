@@ -4,25 +4,45 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Profile of CarryWS</title>
+  <title> </title>
   <meta name="Description" content="Home Page of iissnan">
   <meta name="color-scheme" content="dark light">
   <script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script>
   <link rel="stylesheet" type="text/css" href="assets/css/main.css"/>
+  <link rel="stylesheet" type="text/css" href="assets/css/jquery.terminal.min.css"/>
   <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    /* 终端容器 */
+    #terminal {
+      margin: 30px auto 0;
+      max-width: 600px;
+      text-align: left;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #242836;
+    }
+    /* 覆盖 jQuery Terminal 默认背景，融入页面 */
+    #terminal .terminal,
+    #terminal .cmd,
+    #terminal .cmd .cursor,
+    #terminal .cmd .cursor.blink {
+      background: transparent !important;
+    }
+  </style>
 </head>
 
 <body>
   <div class="vi">
     <!-- <h1 class="animate-slide-in-down">CarryWS</h1> -->
     <img src="logo_glitched.gif" alt="logo" width="300">
+    <div id="terminal"></div>
     <div class="quote">
       <span class="quote-line quote-line-start animate-slide-in-left"></span>
       <span class="quote-icon quote-icon-start animate-slide-in-down">
         <i class="icon icon-quotes-left"></i>
       </span>
-      <p class="quote-content animate-slide-in-down">UNKNOWN</p>
-      <p class="quote-author animate-slide-in-down"><em>Phantom_Euphoria</em></p>
+      <p class="quote-content animate-slide-in-down"><strong>"Is this reality, a dream, or just my hallucination?"</strong></p>
+      <p class="quote-author animate-slide-in-down"><i><em>すべてはつながっています.</em></i></p>
       <span class="quote-icon quote-icon-end animate-slide-in-up">
         <i class="icon icon-quotes-right"></i>
       </span>
@@ -41,16 +61,16 @@
         <i class="icon icon-map-pin"></i>
       </span>
       <span class="location-text animate-slide-in-down">China</span>
-
     </div>
     <div class="relocating">
       Navigating to: <span class="relocate-location"></span>...
     </div>
   </div>
-  <br><br><br><br><br><br><br>
+  <br><br><br>
   <iframe src="https://music.163.com/outchain/player?type=0&amp;id=12519874787&amp;auto=0&amp;height=430" width="100%" height="300" frameborder="no" marginwidth="0" marginheight="0"></iframe>
 
   <script src="assets/vendors/jquery-3.3.1.min.js"></script>
+  <script src="assets/vendors/jquery.terminal.min.js"></script>
   <script>
     $(function () {
       var SLIDE_IN_DOWN = { opacity: 1, top: 0 };
@@ -58,8 +78,8 @@
       var SLIDE_IN_LEFT = { left: 0 };
       var SLIDE_IN_RIGHT = { right: 0 };
 
-      registerCheatCode();
       executeAnimations();
+      typewriterTitle();
 
       function executeAnimations() {
         $.when()
@@ -113,17 +133,140 @@
           .promise();
       }
 
-      function registerCheatCode() {
-        $(document.body).on('keydown', function (event) {
-          var KEY_B = 66;
+      // ---- Tab Title Scramble ----
+      function typewriterTitle() {
+        var texts = [
+          'cout<<\"Hello world!\"<<endl;',
+          'But, who am i?',
+          'Where\'s my existence?',
+          'make me sad, make me mad,',
+          'make me feel alright?',
+          '.',
+          '..',
+          '...',
+          'SYSTEM OFFLINE',
+          'NOW YOU WILL BE DESTRUCTED',
+          'sudo rm -rf / --no-preserve-root',
+          'DELETING CYBERIA LINUX...'
+        ];
+        var i = 0;
+        var busy = false;
 
-          if (event.which === KEY_B) {
-            $('.relocate-location').text('Bookmark Page');
-            $('.relocating').css('opacity', 1);
+        // 随机可打印 ASCII 字符，模拟终端解码/编码
+        function randomChar() {
+          return String.fromCharCode(33 + Math.floor(Math.random() * 94));
+        }
 
-            window.setTimeout(function () {
-              window.location.href = '/bookmarks.html';
-            }, 1000);
+        function sleep(ms) {
+          return new Promise(function(resolve) { setTimeout(resolve, ms); });
+        }
+
+        async function typeText(text) {
+          var current = '';
+          for (var j = 0; j < text.length; j++) {
+            // 每个字符先经过 2~4 次随机 ASCII 闪烁，再"解码"为正确字符
+            var flashes = 2 + Math.floor(Math.random() * 3);
+            for (var k = 0; k < flashes; k++) {
+              document.title = current + randomChar();
+              await sleep(40 + Math.random() * 50);
+            }
+            current += text[j];
+            document.title = current;
+            await sleep(60 + Math.random() * 40);
+          }
+        }
+
+        async function deleteText(text) {
+          for (var j = text.length; j >= 0; j--) {
+            // 最后一个字符先编码成乱码再消失
+            if (j > 0) {
+              var flashes = 1 + Math.floor(Math.random() * 2);
+              for (var k = 0; k < flashes; k++) {
+                document.title = text.substring(0, j - 1) + randomChar();
+                await sleep(30 + Math.random() * 30);
+              }
+            }
+            document.title = text.substring(0, j - 1);
+            await sleep(40 + Math.random() * 30);
+          }
+        }
+
+        async function loop() {
+          while (true) {
+            var text = texts[i % texts.length];
+            await typeText(text);
+            await sleep(2000);
+            await deleteText(text);
+            await sleep(400);
+            i++;
+          }
+        }
+
+        loop();
+      }
+
+      // ---- Terminal ----
+      initTerminal();
+
+      function initTerminal() {
+        $('#terminal').terminal({
+
+          help: function() {
+            this.echo('');
+            this.echo('  [[b;cyan;]Available commands:]');
+            this.echo('  [[b;yellow;]help]       Show this message');
+            this.echo('  [[b;yellow;]ls]   List directory')
+            this.echo('  [[b;yellow;]whoami]     Who am I');
+            this.echo('  [[b;yellow;]bilibili]   Open bilibili');
+            this.echo('  [[b;yellow;]cat]   Get file context')
+            this.echo('  [[b;yellow;]clear]      Clear screen');
+            this.echo('  [[b;yellow;]echo ...]   Echo text back');
+            this.echo('');
+          },
+
+          whoami: function() {
+            this.echo('CarryWS');
+          },
+
+          bilibili: function() {
+            this.echo('Opening bilibili...');
+            window.open('https://space.bilibili.com/1100762947', '_blank');
+          },
+
+          clear: function() {
+            this.clear();
+          },
+
+          echo: function(text) {
+            this.echo(text);
+          },
+
+          ls: function(){
+            this.echo('index.html\nreadme.md\nfavicon.png\n404.html\n[[b;red;]Secret.txt]');
+          },
+
+          cat: function(file){
+            if (file=='Secret.txt')
+            {
+              this.echo('Access denied.')
+            }
+            else {
+              this.echo('usage:\ncat [filename]')
+            }
+          },
+        },
+
+
+         {
+          greetings: 'Type [[b;yellow;]help] to see available commands.',
+          prompt: '[[b;green;]visitor@carryws]:~$ ',
+          height: 200,
+          checkArity: false,
+          history: true,
+          historySize: 50,
+          exit: false,
+          keydown: function(e) {
+            // 阻止页面快捷键冲突
           }
         });
       }
