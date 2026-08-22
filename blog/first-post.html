@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>你好，世界 | CarryWS</title>
+<style>
+  html { background: black; }
+  body { color: #6C7486; font-family: "Courier New", monospace;
+         max-width: 720px; margin: 0 auto; padding: 60px 24px; line-height: 1.8; }
+  a { color: #99A3BA; text-decoration: none; border-bottom: 1px dotted #6C7486; }
+  a:hover { color: #E4ECFA; }
+  h1 { color: #E4ECFA; font-size: 26px; letter-spacing: 1px; }
+  h2 { color: #E4ECFA; font-size: 18px; margin-top: 32px; }
+  .date { color: #3F4656; font-size: 13px; }
+  code { background: #111; padding: 2px 6px; color: #99A3BA; }
+  pre { background: #111; padding: 12px; overflow-x: auto; color: #99A3BA; }
+  ::selection { background: #222; color: #99A3BA; }
+</style>
+</head>
+<body>
+  <p><a href="/blog.html">← Blog</a></p>
+  <h1>你好，世界</h1>
+  <p class="date">2026-08-22</p>
+
+  <p>这是我的博客第一篇。说是博客，其实更像是一份折腾记录——把这段时间搭服务器的经历写下来，给自己留个念。</p>
+
+  <h2>一切的开始</h2>
+  <p>想法很简单：搞一台自己的服务器，跑一个 MC 服务器，再挂个 QQ 机器人，朋友们想玩就玩。说干就干，先拿虚拟机预演——Docker 全家桶（AstrBot、NapCat、PaperMC、netdata、Dockge）全部跑通，那时候还挺得意，觉得自己已经是"运维大师"了。</p>
+  <p>不过呢，直到我写这篇文章的时候，一切实验都还在虚拟机下进行，因为真机的内存还没到位。</p>
+
+  <h2>爆炸谷事件</h2>
+  <p>预演的时候干了一件蠢事：为了测服务器性能，我用 <code>/fill</code> 一次性塞了上万个 TNT，然后全部点燃。结果就是：CPU 单核顶满 80%，TPS 从 20 掉到个位数，世界疯狂抽搐，TNT 点了不炸，炸了 5 分钟还没完。</p>
+  <p>唯一的成果，是炸出了一条又深又长的峡谷。我给它起名叫"爆炸谷"，打算以后当服务器地标。（可惜存档被我清了，爆炸谷也跟着消失了，没关系到时候再炸一个</p>
+
+  <h2>闲鱼翻车记</h2>
+  <p>真机是联想 M720q（i5-8100T），除了 CPU 全在闲鱼淘的。内存条那家店"信用极好"，结果到手是假海力士——颗粒质量差到装 Ubuntu 装一半直接崩溃，蜂鸣报警。最后退货，在淘宝换正规渠道买了新的。</p>
+  <p>血的教训：内存、电源、硬盘这三样，永远别在闲鱼赌人品。</p>
+  <p>不过呢，主板并不是国行的那个M720q，而是同主板在日本发行的NEC主机，外观泛白，和ThinkPad那烂大街的质感截然不同。（至少我是这么感觉的）</p>
+
+  <h2>从内网到公网</h2>
+  <p>为了让朋友能连上家里的服务器，买了台日本云服务器（1核1G），跑 frp 做内网穿透。又买了 carryws.xyz 域名，实名认证、配 NS、等 DNS 生效。</p>
+  <p>现在整条链路是通的：域名 → 云服务器 → frp 隧道 → 家里。MC 服务器等真机内存到位就能上线，到时候 <code>carryws.xyz:25565</code> 见。</p>
+
+  <h2>关于这个网站</h2>
+  <p>这个站点原来是我放在 GitHub Pages 的个人主页(https://carryws.github.io/)，现在搬到了自己的云服务器上，用 nginx 跑着。博客也是刚加的，以后折腾什么就记点什么。</p>
+
+  <p>就先写到这吧。服务器折腾记，未完待续。</p>
+
+</body>
+</html>
