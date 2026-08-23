@@ -18,6 +18,7 @@
   .post h2 a:hover { color: #99A3BA; }
   .date { font-size: 13px; color: #3F4656; }
   .summary { margin: 4px 0 0; font-size: 14px; }
+  .empty { color: #3F4656; font-style: italic; }
   ::selection { background: #222; color: #99A3BA; }
 </style>
 </head>
@@ -25,17 +26,10 @@
   <p class="back"><a href="/">← CarryWS</a></p>
   <h1>Blog</h1>
 
-
-  <div class="post">
-    <h2><a href="blog/2026-08-23-new.html">我正式成为了腐竹</a></h2>
-    <div class="date">2026-08-23</div>
-    <p class="summary">今天内存到了，正式组好了主机，也同时配好了docker服务，之后就docker compose up -d，PaperMC，启动！ 说起来，本来以为今天收官之日</p>
-  </div>
-
   <div class="post">
     <h2><a href="blog/first-post.html">你好，世界</a></h2>
     <div class="date">2026-08-22</div>
-    <p class="summary">这是我的博客第一篇。说是博客，其实更像是一份折腾记录——把这段时间搭服务器的经历写下来，给自己留个念。 一切的开始 想法很简单：搞一台自己的服务器，跑一个 MC</p>
+    <p class="summary">爆炸谷、闲鱼翻车、内网穿透——服务器折腾记第一篇。</p>
   </div>
 
 </body>
