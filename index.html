@@ -513,16 +513,37 @@
       update();
       setInterval(update, 30000);
 
-      // 点击复制服务器地址
+      // 点击复制服务器地址（兼容 http 非安全上下文）
       addr.addEventListener('click', function () {
         var old = addr.textContent;
-        navigator.clipboard.writeText('carryws.xyz:25565').then(function () {
+        var done = function () {
           addr.textContent = 'copied!';
           setTimeout(function () { addr.textContent = old; }, 1500);
-        }).catch(function () {
+        };
+        var fail = function () {
           addr.textContent = 'copy fail';
           setTimeout(function () { addr.textContent = old; }, 1500);
-        });
+        };
+        var text = 'carryws.xyz:25565';
+        // 安全上下文（https/localhost/file）用 Clipboard API
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(done).catch(fail);
+          return;
+        }
+        // http 环境降级方案
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          done();
+        } catch (e) {
+          fail();
+        }
+        document.body.removeChild(ta);
       });
     })();
   </script>
