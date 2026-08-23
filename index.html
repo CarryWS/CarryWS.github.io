@@ -28,6 +28,102 @@
     #terminal .cmd .cursor.blink {
       background: transparent !important;
     }
+    /* 网易云歌单悬浮方块 */
+    #music-box {
+      position: fixed;
+      right: 24px;
+      top: 90px;
+      z-index: 9999;
+      width: 330px;
+      background: rgba(10, 12, 18, 0.94);
+      border: 1px solid #2a2f3a;
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #music-box .music-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #13161d;
+      border-bottom: 1px solid #2a2f3a;
+      cursor: move;
+      color: #7ee787;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+    #music-box .music-title::before {
+      content: '♪ ';
+      color: #58a6ff;
+    }
+    #music-box .music-close {
+      cursor: pointer;
+      color: #565d6e;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    #music-box .music-close:hover {
+      color: #58a6ff;
+    }
+    #music-box.collapsed iframe {
+      display: none;
+    }
+    #music-box.collapsed {
+      width: auto;
+      min-width: 150px;
+    }
+    #music-box iframe {
+      display: block;
+      width: 330px;
+      height: 430px;
+      border: 0;
+      background: #0a0c12;
+    }
+    /* M720Q 系统状态（左下角） */
+    #sys-status {
+      position: fixed;
+      left: 16px;
+      bottom: 16px;
+      z-index: 9999;
+      padding: 8px 12px;
+      background: rgba(10, 12, 18, 0.9);
+      border: 1px solid #2a2f3a;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.9;
+      color: #8b949e;
+      letter-spacing: 1px;
+      user-select: none;
+      -webkit-user-select: none;
+      text-align: left;
+    }
+    #sys-status .ss-line {
+      white-space: nowrap;
+      text-align: left;
+    }
+    #sys-status .ss-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      background: #565d6e;
+      vertical-align: 1px;
+    }
+    #sys-status .ss-val {
+      color: #7ee787;
+    }
+    #sys-status .ss-addr {
+      color: #58a6ff;
+      cursor: pointer;
+      border-bottom: 1px dotted #58a6ff;
+    }
   </style>
 </head>
 
@@ -49,12 +145,12 @@
       <span class="quote-line quote-line-end animate-slide-in-right"></span>
     </div>
     <div class="links">
-      <a href="https://space.bilibili.com/1100762947" class="animate-slide-in-down">bilibili</a>
-      <a href="https://music.163.com/#/artist?id=54683478" class="animate-slide-in-down">CloudMusic</a>
-      <a href="https://www.youtube.com/@CarryWS" class="animate-slide-in-down">YouTube</a>
-      <a href="https://x.com/carry_ws" class="animate-slide-in-down">X</a>
-      <a href="https://github.com/CarryWS" class="animate-slide-in-down">GitHub</a>
-      <a href="https://steamcommunity.com/id/CarryWS/" class="animate-slide-in-down">Steam</a>
+      <a href="https://space.bilibili.com/1100762947" target="_blank" rel="noopener" class="animate-slide-in-down">bilibili</a>
+      <a href="https://music.163.com/#/artist?id=54683478" target="_blank" rel="noopener" class="animate-slide-in-down">CloudMusic</a>
+      <a href="https://www.youtube.com/@CarryWS" target="_blank" rel="noopener" class="animate-slide-in-down">YouTube</a>
+      <a href="https://x.com/carry_ws" target="_blank" rel="noopener" class="animate-slide-in-down">X</a>
+      <a href="https://github.com/CarryWS" target="_blank" rel="noopener" class="animate-slide-in-down">GitHub</a>
+      <a href="https://steamcommunity.com/id/CarryWS/" target="_blank" rel="noopener" class="animate-slide-in-down">Steam</a>
       <a href="blog.html" class="animate-slide-in-down">Blogs</a>
     </div>
     <div class="location">
@@ -67,8 +163,19 @@
       Navigating to: <span class="relocate-location"></span>...
     </div>
   </div>
-  <br><br><br>
-  <iframe src="https://music.163.com/outchain/player?type=0&amp;id=12519874787&amp;auto=0&amp;height=430" width="100%" height="300" frameborder="no" marginwidth="0" marginheight="0"></iframe>
+  <div id="sys-status">
+    <div class="ss-line"><span class="ss-dot" id="ss-dot"></span> Local Server CPU:<span class="ss-val" id="ss-cpu">--</span>% RAM:<span class="ss-val" id="ss-mem">--</span>% TEMP:<span class="ss-val" id="ss-temp">--</span>°C</div>
+    <div class="ss-line"><span class="ss-dot" id="ss-mc-dot"></span> Minecraft Server <span class="ss-val" id="ss-mc">--/6</span> <span id="ss-addr" title="点击复制">carryws.xyz:25565 (click to copy)</span></div>
+  </div>
+
+  <div id="music-box">
+    <div class="music-bar" id="music-bar">
+      <span class="music-title">THE PURE CYBERIA...</span>
+      <span class="music-close" id="music-close">−</span>
+    </div>
+    <iframe src="https://music.163.com/outchain/player?type=0&amp;id=12519874787&amp;auto=0&amp;height=430" frameborder="no" marginwidth="0" marginheight="0" allowtransparency="true"></iframe>
+  </div>
+
 
   <script src="assets/vendors/jquery-3.3.1.min.js"></script>
   <script src="assets/vendors/jquery.terminal.min.js"></script>
@@ -259,7 +366,7 @@
 
 
          {
-          greetings: 'Type [[b;yellow;]help] to see available commands.',
+          greetings: 'Cyberia Linux Ver:1.0\nWelcome to the realm of this euphoria.\nType [[b;yellow;]help] to see available commands.',
           prompt: '[[b;green;]visitor@carryws]:~$ ',
           height: 200,
           checkArity: false,
@@ -272,6 +379,152 @@
         });
       }
     });
+
+    // ---- 网易云歌单悬浮方块：拖拽 + 位置记忆 ----
+    (function () {
+      var box = document.getElementById('music-box');
+      var bar = document.getElementById('music-bar');
+      var closeBtn = document.getElementById('music-close');
+      if (!box || !bar) return;
+
+      // 恢复上次位置与折叠状态
+      try {
+        var saved = JSON.parse(localStorage.getItem('musicBoxPos'));
+        if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') {
+          box.style.right = 'auto';
+          box.style.left = saved.left + 'px';
+          box.style.top = saved.top + 'px';
+        }
+        if (saved && saved.collapsed) {
+          box.classList.add('collapsed');
+          closeBtn.textContent = '+';
+        }
+      } catch (e) {}
+
+      var dragging = false, startX, startY, originX, originY;
+
+      function onDown(e) {
+        dragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        var r = box.getBoundingClientRect();
+        originX = r.left;
+        originY = r.top;
+        box.style.right = 'auto';
+        box.style.left = originX + 'px';
+        box.style.top = originY + 'px';
+        e.preventDefault();
+      }
+
+      function onMove(e) {
+        if (!dragging) return;
+        var nx = originX + e.clientX - startX;
+        var ny = originY + e.clientY - startY;
+        // 限制在视口内
+        nx = Math.max(0, Math.min(nx, window.innerWidth - box.offsetWidth));
+        ny = Math.max(0, Math.min(ny, window.innerHeight - box.offsetHeight));
+        box.style.left = nx + 'px';
+        box.style.top = ny + 'px';
+      }
+
+      function onUp() {
+        if (!dragging) return;
+        dragging = false;
+        try {
+          localStorage.setItem('musicBoxPos', JSON.stringify({
+            left: box.offsetLeft,
+            top: box.offsetTop
+          }));
+        } catch (e) {}
+      }
+
+      // 鼠标
+      bar.addEventListener('mousedown', onDown);
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      // 触屏
+      bar.addEventListener('touchstart', function (e) {
+        var t = e.touches[0];
+        onDown({ clientX: t.clientX, clientY: t.clientY, preventDefault: function () { e.preventDefault(); } });
+      }, { passive: false });
+      document.addEventListener('touchmove', function (e) {
+        var t = e.touches[0];
+        onMove({ clientX: t.clientX, clientY: t.clientY });
+      }, { passive: false });
+      document.addEventListener('touchend', onUp);
+
+      // 折叠/展开按钮
+      closeBtn.addEventListener('click', function () {
+        var collapsed = box.classList.toggle('collapsed');
+        closeBtn.textContent = collapsed ? '+' : '−';
+        try {
+          var s = JSON.parse(localStorage.getItem('musicBoxPos')) || {};
+          s.collapsed = collapsed;
+          s.left = box.offsetLeft;
+          s.top = box.offsetTop;
+          localStorage.setItem('musicBoxPos', JSON.stringify(s));
+        } catch (e) {}
+      });
+    })();
+
+    // ---- M720Q 系统状态（左下角，真实数据）----
+    (function () {
+      var el = document.getElementById('sys-status');
+      if (!el) return;
+      var cpu = document.getElementById('ss-cpu');
+      var mem = document.getElementById('ss-mem');
+      var temp = document.getElementById('ss-temp');
+      var dot = document.getElementById('ss-dot');
+      var mcDot = document.getElementById('ss-mc-dot');
+      var mc = document.getElementById('ss-mc');
+      var addr = document.getElementById('ss-addr');
+
+      function setDot(elem, color) {
+        elem.style.background = color;
+        elem.style.boxShadow = '0 0 6px ' + color;
+      }
+
+      function update() {
+        fetch('http://carryws.xyz:8787/status', { cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            cpu.textContent = (typeof d.cpu === 'number') ? d.cpu.toFixed(1) : '--';
+            mem.textContent = (d.mem && typeof d.mem.percent === 'number') ? d.mem.percent.toFixed(1) : '--';
+            temp.textContent = (typeof d.temp === 'number') ? d.temp.toFixed(1) : '--';
+            setDot(dot, '#3fb950');
+            if (d.mc && d.mc.online) {
+              setDot(mcDot, '#3fb950');
+              mc.textContent = d.mc.players + '/' + d.mc.max;
+            } else {
+              setDot(mcDot, '#f85149');
+              mc.textContent = 'offline';
+            }
+          })
+          .catch(function () {
+            setDot(dot, '#f85149');
+            setDot(mcDot, '#f85149');
+            cpu.textContent = '--';
+            mem.textContent = '--';
+            temp.textContent = '--';
+            mc.textContent = '?';
+          });
+      }
+
+      update();
+      setInterval(update, 30000);
+
+      // 点击复制服务器地址
+      addr.addEventListener('click', function () {
+        var old = addr.textContent;
+        navigator.clipboard.writeText('carryws.xyz:25565').then(function () {
+          addr.textContent = 'copied!';
+          setTimeout(function () { addr.textContent = old; }, 1500);
+        }).catch(function () {
+          addr.textContent = 'copy fail';
+          setTimeout(function () { addr.textContent = old; }, 1500);
+        });
+      });
+    })();
   </script>
 </body>
 </html>
