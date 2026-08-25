@@ -485,7 +485,7 @@
       }
 
       function update() {
-        fetch('http://carryws.xyz:8787/status', { cache: 'no-store' })
+        fetch('/api/status', { cache: 'no-store' })
           .then(function (r) { return r.json(); })
           .then(function (d) {
             cpu.textContent = (typeof d.cpu === 'number') ? d.cpu.toFixed(1) : '--';
