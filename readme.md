@@ -8,7 +8,7 @@
 ./tools/blog-admin/start.sh      # Windows: tools\blog-admin\start.bat
 ```
 
-浏览器会自动打开 http://127.0.0.1:8787/admin/ ，可以新建/修改/删除文章、上传图片、
+浏览器会自动打开 http://127.0.0.1:7878/admin/ ，可以新建/修改/删除文章、上传图片、
 实时预览、一键 git 发布，保存时自动重建 `blog.html`。
 
 命令行版本：`node tools/blog-admin/cli.js list|new|delete|build`。

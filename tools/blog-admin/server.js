@@ -3,9 +3,9 @@
 /**
  * 博客管理后台（本地工具，仅监听 127.0.0.1）
  *
- *   node tools/blog-admin/server.js [--port 8787] [--host 127.0.0.1] [--no-open]
+ *   node tools/blog-admin/server.js [--port 7878] [--host 127.0.0.1] [--no-open]
  *
- * 启动后浏览器打开 http://127.0.0.1:8787/admin/ 即可写博客。
+ * 启动后浏览器打开 http://127.0.0.1:7878/admin/ 即可写博客。
  * 同一个端口也会托管整站静态文件，方便随时预览 blog.html 与文章页。
  */
 
@@ -44,7 +44,7 @@ const MIME = {
 const BLOCKED = new Set(['secret.txt', '.git', '.gitignore', '.env']);
 
 function parseArgs(argv) {
-  const args = { port: 8787, host: '127.0.0.1', open: true };
+  const args = { port: 7878, host: '127.0.0.1', open: true };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--port' || arg === '-p') args.port = Number(argv[++i]) || args.port;

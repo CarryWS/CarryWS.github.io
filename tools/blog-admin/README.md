@@ -18,18 +18,42 @@ tools\blog-admin\start.bat
 node tools/blog-admin/server.js
 ```
 
-浏览器会自动打开 <http://127.0.0.1:8787/admin/>。
+浏览器会自动打开 <http://127.0.0.1:7878/admin/>。
 
 可选参数：
 
 ```bash
-node tools/blog-admin/server.js --port 8787 --host 127.0.0.1 --no-open
+node tools/blog-admin/server.js --port 7878 --host 127.0.0.1 --no-open
 ```
 
-同一个端口也托管整站，所以直接访问 <http://127.0.0.1:8787/blog.html> 就能看线上效果。
+同一个端口也托管整站，所以直接访问 <http://127.0.0.1:7878/blog.html> 就能看线上效果。
 
 > 该工具只监听 `127.0.0.1`，是**本地**工具：静态站点没有后端，写文件必须在你自己电脑上跑。
 > 不要把 `node` 服务暴露到公网。
+
+## 云服务器常驻（systemd）
+
+线上那份站点在云服务器的 `/opt/site/CarryWS.github.io`，nginx 直接托管这个目录；
+后台由 systemd 托管（不是 SSH 里前台跑），所以断开 SSH、服务器重启都不影响它：
+
+```bash
+sudo systemctl status blog-admin      # 状态
+sudo systemctl restart blog-admin     # 改完 server.js 后重启
+sudo journalctl -u blog-admin -f      # 实时日志
+```
+
+单元文件 `/etc/systemd/system/blog-admin.service`：`User=admin`、
+`WorkingDirectory=/opt/site/CarryWS.github.io`、
+`ExecStart=/usr/bin/node tools/blog-admin/server.js --host 127.0.0.1 --port 7878 --no-open`、
+`Restart=always`。端口 `7878` 就是这里的默认值（服务器上 `8787` 已被 frps 占用）。
+
+> 后台**没有任何认证**：谁能连上 7878，谁就能改文件、删文章、触发 git 提交。
+> 所以永远保持 `--host 127.0.0.1`，并且**不要**在 nginx 里给它加 `proxy_pass`。
+> 从外面访问走 SSH 隧道：`ssh -L 7878:127.0.0.1:7878 admin@<服务器>`。
+
+> 服务端仓库用 `https://` 远程且没有凭证，**「发布」按钮在服务器上会 push 失败**
+> （`git add` / `commit` 会成功，但推不上去，还留下一个没推的本地提交）。
+> 提交和推送在本地做，服务器只负责保存与展示。
 
 ## 界面能做什么
 
