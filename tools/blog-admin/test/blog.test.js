@@ -101,3 +101,36 @@ test('posts: 现有 blog.html 与生成结果逐字节一致', async () => {
   const onDisk = fs.readFileSync(posts.INDEX_FILE, 'utf8').replace(/\r\n/g, '\n');
   assert.equal(html.replace(/\r\n/g, '\n'), onDisk, 'blog.html 与生成结果不一致：别手工改它，跑一次「重建索引」');
 });
+
+test('posts: post-time 元信息可往返', () => {
+  const base = {
+    slug: 'x.html',
+    title: 'T',
+    date: '2026-01-02',
+    tags: [],
+    draft: false,
+    mode: 'markdown',
+    content: '正文',
+  };
+  const withTime = posts.buildPostHtml({ ...base, time: '20:03:56' });
+  assert.match(withTime, /<meta name="post-time" content="20:03:56">/);
+  assert.equal(posts.parsePost(withTime, 'x.html').time, '20:03:56');
+
+  const noTime = posts.buildPostHtml(base);
+  assert.ok(!noTime.includes('post-time'), '没有时间就不该写这个 meta');
+
+  assert.equal(posts.normalizeTime('9:5'), '09:05:00');
+  assert.equal(posts.normalizeTime('25:00'), '', '非法时间应被丢弃');
+  assert.equal(posts.normalizeTime('20:03'), '20:03:00');
+});
+
+test('posts: 同一天按 post-time 倒序，无时间的最后按文件名', () => {
+  const list = [
+    { slug: 'a.html', date: '2026-09-15', time: '' },
+    { slug: 'b.html', date: '2026-09-15', time: '20:03:00' },
+    { slug: 'c.html', date: '2026-09-15', time: '09:00:00' },
+    { slug: 'd.html', date: '2026-09-16', time: '' },
+  ];
+  const sorted = list.slice().sort(posts.comparePosts).map((p) => p.slug);
+  assert.deepEqual(sorted, ['d.html', 'b.html', 'c.html', 'a.html']);
+});

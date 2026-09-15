@@ -92,6 +92,7 @@ HTML 模式下工具栏会插入对应的 HTML 标签。
   <meta name="description" content="摘要，列表页显示这段">
   <meta name="keywords" content="标签1, 标签2">
   <meta name="post-date" content="2026-09-15">
+  <meta name="post-time" content="20:03:56">
   <meta name="author" content="CarryWS">
   ...
 </head>
@@ -108,6 +109,10 @@ HTML 模式下工具栏会插入对应的 HTML 标签。
 
 元信息都写在 HTML 里，没有独立的数据库 / JSON 索引文件，
 所以手工新建的 HTML 文件同样能被 `blog.html` 收录。
+
+`post-time` 是**创建时间**：新建文章时自动写入当前时间，之后保存/改名都不会改动它。
+列表页排序是「日期倒序 → 同一天按 `post-time` 倒序 → 最后按文件名」，
+所以同一天写多篇不会退化成按文件名排序（老文章没有这个 meta，按 `00:00:00` 处理，行为不变）。
 
 ## 命令行用法
 

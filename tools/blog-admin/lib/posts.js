@@ -57,6 +57,23 @@ function today() {
   return normalizeDate(new Date());
 }
 
+/** 规范化 HH:MM 或 HH:MM:SS；非法输入返回空串 */
+function normalizeTime(input) {
+  const match = String(input == null ? '' : input).trim().match(/^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/);
+  if (!match) return '';
+  const [hh, mm, ss] = [Number(match[1]), Number(match[2]), Number(match[3] || 0)];
+  if (hh > 23 || mm > 59 || ss > 59) return '';
+  return [hh, mm, ss].map((n) => String(n).padStart(2, '0')).join(':');
+}
+
+/** 当前本地时间 HH:MM:SS：新建文章时写入 <meta name="post-time">，用于同一天文章的排序 */
+function nowTime() {
+  const d = new Date();
+  return [d.getHours(), d.getMinutes(), d.getSeconds()]
+    .map((n) => String(n).padStart(2, '0'))
+    .join(':');
+}
+
 function normalizeTags(tags) {
   if (Array.isArray(tags)) return tags.map((t) => String(t).trim()).filter(Boolean);
   return String(tags == null ? '' : tags)
@@ -141,6 +158,7 @@ function parsePost(html, slug) {
     slug,
     title,
     date: normalizeDate(date || today()),
+    time: normalizeTime(readMeta(html, 'post-time')),
     tags,
     description,
     draft,
@@ -182,6 +200,7 @@ function renderBody(content, mode) {
 function buildPostHtml(post) {
   const title = String(post.title || '无标题').trim();
   const date = normalizeDate(post.date);
+  const time = normalizeTime(post.time);
   const tags = normalizeTags(post.tags);
   const body = renderBody(post.content, post.mode);
   const description = truncate(
@@ -199,6 +218,7 @@ function buildPostHtml(post) {
     `<meta name="description" content="${escapeHtml(description)}">`,
     `<meta name="keywords" content="${escapeHtml(tags.join(', '))}">`,
     `<meta name="post-date" content="${date}">`,
+    time ? `<meta name="post-time" content="${time}">` : '',
     `<meta name="author" content="${SITE_NAME}">`,
     post.draft ? '<meta name="robots" content="noindex, nofollow">' : '',
     '<link rel="icon" type="image/png" href="/favicon.png">',
@@ -264,6 +284,22 @@ async function readPost(slug) {
   };
 }
 
+/** 排序键：日期 + 时间（没有时间的按 00:00:00 看待） */
+function postSortKey(post) {
+  return `${post.date || ''} ${normalizeTime(post.time) || '00:00:00'}`;
+}
+
+/**
+ * 文章排序：日期倒序 → 同一天按 post-time 倒序 → 最后按文件名。
+ * 同一天的多篇文章靠 post-time 区分先后，避免退化成按文件名排序。
+ */
+function comparePosts(a, b) {
+  const ka = postSortKey(a);
+  const kb = postSortKey(b);
+  if (ka !== kb) return ka < kb ? 1 : -1;
+  return String(a.slug).localeCompare(String(b.slug));
+}
+
 async function listPosts({ includeDrafts = true } = {}) {
   const slugs = await listSlugs();
   const posts = [];
@@ -276,10 +312,7 @@ async function listPosts({ includeDrafts = true } = {}) {
       posts.push({ slug, title: slug, error: error.message, date: '', draft: false, tags: [] });
     }
   }
-  posts.sort((a, b) => {
-    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-    return String(a.slug).localeCompare(String(b.slug));
-  });
+  posts.sort(comparePosts);
   return posts;
 }
 
@@ -309,10 +342,24 @@ async function savePost(input) {
     throw new Error(`文件 blog/${targetSlug} 已存在，请换一个文件名`);
   }
 
+  // 创建时间：新建时打上当前时间；修改已有文章时保留它原来的时间（改名也不变），
+  // 否则同一天的文章每保存一次就会重排一次。
+  let time = normalizeTime(input.time);
+  if (!time && originalSlug && (await postExists(originalSlug))) {
+    try {
+      const oldHtml = await fsp.readFile(slugToFile(originalSlug), 'utf8');
+      time = normalizeTime(parsePost(oldHtml, originalSlug).time);
+    } catch {
+      time = '';
+    }
+  }
+  if (!time && creating) time = nowTime();
+
   const post = {
     slug: targetSlug,
     title,
     date,
+    time,
     tags: normalizeTags(input.tags),
     description: String(input.description || '').trim(),
     draft: Boolean(input.draft),
@@ -497,6 +544,8 @@ module.exports = {
   assertSafeSlug,
   suggestSlug,
   normalizeDate,
+  normalizeTime,
+  nowTime,
   normalizeTags,
   today,
   truncate,
@@ -506,6 +555,8 @@ module.exports = {
   buildIndexHtml,
   renderBody,
   listPosts,
+  comparePosts,
+  postSortKey,
   listSlugs,
   readPost,
   savePost,
