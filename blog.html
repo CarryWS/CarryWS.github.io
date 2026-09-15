@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Blog | CarryWS</title>
+<meta name="description" content="CarryWS 的博客">
 <link rel="icon" type="image/png" href="/favicon.png">
 <style>
   html { background: black; }
@@ -13,41 +14,78 @@
   a:hover { color: #E4ECFA; border-bottom-color: #99A3BA; }
   .back { font-size: 14px; }
   h1 { color: #E4ECFA; font-size: 28px; letter-spacing: 2px; }
+  .search { width: 100%; box-sizing: border-box; background: #0b0b0b; color: #E4ECFA;
+            border: 1px solid #242836; padding: 8px 12px; font-family: inherit;
+            font-size: 14px; margin: 6px 0 10px; outline: none; }
+  .search:focus { border-color: #3F4656; }
+  .count { font-size: 13px; color: #3F4656; margin: 0 0 12px; }
   .post { border-bottom: 1px solid #242836; padding: 18px 0; }
   .post h2 { font-size: 18px; margin: 0 0 6px; }
   .post h2 a { color: #E4ECFA; border: none; }
   .post h2 a:hover { color: #99A3BA; }
   .date { font-size: 13px; color: #3F4656; }
   .summary { margin: 4px 0 0; font-size: 14px; }
+  .tag { font-size: 12px; color: #3F4656; border: 1px solid #242836;
+         padding: 0 6px; margin-left: 8px; }
+  .empty { color: #3F4656; font-style: italic; }
   ::selection { background: #222; color: #99A3BA; }
 </style>
 </head>
 <body>
-  <p class="back"><a href="/">← CarryWS</a></p>
+  <p class="back"><a href="/">← Back</a></p>
   <h1>Blog</h1>
+  <input id="search" class="search" type="search" placeholder="搜索标题、标签或摘要…" autocomplete="off">
+  <p class="count" id="count">共 5 篇文章</p>
 
-  <div class="post">
+  <div class="post" data-title="测试" data-tags="" data-text="如果你现在观察这个网站在github上留存的版本会发现多了一个工具，没错，就是我现在正在用的，纯vibe coding搭建成的——博客编辑器！ 所以这个博客就不写什么东西了，我也懒得写了，主要就是测试">
+    <h2><a href="blog/2026-09-15-post.html">测试</a></h2>
+    <div class="date">2026-09-15</div>
+    <p class="summary">如果你现在观察这个网站在github上留存的版本会发现多了一个工具，没错，就是我现在正在用的，纯vibe coding搭建成的——博客编辑器！ 所以这个博客就不写什么东西了，我也懒得写了，主要就是测试</p>
+  </div>
+
+  <div class="post" data-title="请输入文本" data-tags="" data-text="啊啊啊明天就开学了啊啊啊">
     <h2><a href="blog/2026-09-03-new-3.html">请输入文本</a></h2>
     <div class="date">2026-09-03</div>
     <p class="summary">啊啊啊明天就开学了啊啊啊</p>
   </div>
-  <div class="post">
+
+  <div class="post" data-title="人机也会用qq" data-tags="" data-text="配置完了astrbot和napcat。 其实并没有想象中的那么复杂。安装就不用说了，docker几行命令就完事了，具体配置也很简单，使用反向websocket连接两个服务，这个教程网上已经有了，照抄就">
     <h2><a href="blog/2026-08-23-new-2.html">人机也会用qq</a></h2>
     <div class="date">2026-08-23</div>
-    <p class="summary">配置完了astrbot和napcat。 其实并没有想象中的那么复杂。安装就不用说了，docker几行命令就完事了，具体配置也很简单，使用反向websocket连</p>
+    <p class="summary">配置完了astrbot和napcat。 其实并没有想象中的那么复杂。安装就不用说了，docker几行命令就完事了，具体配置也很简单，使用反向websocket连接两个服务，这个教程网上已经有了，照抄就</p>
   </div>
 
-  <div class="post">
+  <div class="post" data-title="我正式成为了腐竹" data-tags="" data-text="今天内存到了，正式组好了主机，也同时配好了docker服务，之后就docker compose up -d，PaperMC，启动！ 说起来，本来以为今天收官之日，要装一大堆服务，创建一大堆配置文件，会">
     <h2><a href="blog/2026-08-23-new.html">我正式成为了腐竹</a></h2>
     <div class="date">2026-08-23</div>
-    <p class="summary">今天内存到了，正式组好了主机，也同时配好了docker服务，之后就docker compose up -d，PaperMC，启动！ 说起来，本来以为今天收官之日</p>
+    <p class="summary">今天内存到了，正式组好了主机，也同时配好了docker服务，之后就docker compose up -d，PaperMC，启动！ 说起来，本来以为今天收官之日，要装一大堆服务，创建一大堆配置文件，会</p>
   </div>
 
-  <div class="post">
+  <div class="post" data-title="你好，世界" data-tags="" data-text="这是我的博客第一篇。说是博客，其实更像是一份折腾记录——把这段时间搭服务器的经历写下来，给自己留个念。 一切的开始 想法很简单：搞一台自己的服务器，跑一个 MC 服务器，再挂个 QQ 机器人，朋友们想">
     <h2><a href="blog/first-post.html">你好，世界</a></h2>
     <div class="date">2026-08-22</div>
-    <p class="summary">这是我的博客第一篇。说是博客，其实更像是一份折腾记录——把这段时间搭服务器的经历写下来，给自己留个念。 一切的开始 想法很简单：搞一台自己的服务器，跑一个 MC</p>
+    <p class="summary">这是我的博客第一篇。说是博客，其实更像是一份折腾记录——把这段时间搭服务器的经历写下来，给自己留个念。 一切的开始 想法很简单：搞一台自己的服务器，跑一个 MC 服务器，再挂个 QQ 机器人，朋友们想</p>
   </div>
 
+<script>
+  (function () {
+    var input = document.getElementById('search');
+    var count = document.getElementById('count');
+    var posts = Array.prototype.slice.call(document.querySelectorAll('.post'));
+    var total = posts.length;
+    function apply() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      posts.forEach(function (el) {
+        var haystack = [el.dataset.title, el.dataset.tags, el.dataset.text].join(' ').toLowerCase();
+        var match = !q || haystack.indexOf(q) !== -1;
+        el.style.display = match ? '' : 'none';
+        if (match) shown += 1;
+      });
+      count.textContent = q ? '匹配 ' + shown + ' / ' + total + ' 篇文章' : '共 ' + total + ' 篇文章';
+    }
+    input.addEventListener('input', apply);
+  })();
+</script>
 </body>
 </html>

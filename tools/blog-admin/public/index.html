@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>写博客 | CarryWS</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="stylesheet" href="/admin/style.css">
+</head>
+<body>
+<header>
+  <h1>写博客</h1>
+  <span class="meta" id="git-info">…</span>
+  <span class="spacer"></span>
+  <button id="btn-new" class="primary">＋ 新建文章</button>
+  <button id="btn-preview">预览</button>
+  <button id="btn-build" title="根据 blog/ 目录重新生成 blog.html">重建索引</button>
+  <button id="btn-publish" title="git add blog blog.html &amp;&amp; commit &amp;&amp; push">发布</button>
+  <a class="btn" id="link-site" href="/blog.html" target="_blank">查看博客 ↗</a>
+</header>
+
+<main>
+  <aside>
+    <div class="aside-top">
+      <input type="search" id="search" placeholder="搜索文章…" autocomplete="off">
+    </div>
+    <div id="post-list"><p class="empty">加载中…</p></div>
+  </aside>
+
+  <section class="editor">
+    <div class="fields">
+      <div class="field span-2">
+        <label for="title">标题</label>
+        <input type="text" id="title" placeholder="今天折腾了点什么">
+      </div>
+      <div class="field">
+        <label for="date">日期</label>
+        <input type="date" id="date">
+      </div>
+      <div class="field">
+        <label for="slug">文件名（blog/…）</label>
+        <div class="row-inline">
+          <input type="text" id="slug" placeholder="2026-01-01-post.html">
+          <button id="btn-slug" class="ghost" title="按标题重新生成">↻</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="tags">标签（逗号分隔）</label>
+        <input type="text" id="tags" placeholder="折腾, docker">
+      </div>
+      <div class="field span-2">
+        <label for="description">摘要（留空则自动截取正文）</label>
+        <input type="text" id="description" placeholder="列表页显示的一段话">
+      </div>
+      <div class="field">
+        <label for="mode">正文格式</label>
+        <select id="mode">
+          <option value="markdown">Markdown</option>
+          <option value="html">HTML</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <label class="checkbox"><input type="checkbox" id="draft"> 草稿（不在列表页显示）</label>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button data-insert="h2">H2</button>
+      <button data-insert="h3">H3</button>
+      <span class="sep"></span>
+      <button data-insert="bold"><b>B</b></button>
+      <button data-insert="italic"><i>I</i></button>
+      <button data-insert="strike"><s>S</s></button>
+      <button data-insert="code">`code`</button>
+      <span class="sep"></span>
+      <button data-insert="quote">引用</button>
+      <button data-insert="ul">列表</button>
+      <button data-insert="ol">1.</button>
+      <button data-insert="hr">分隔线</button>
+      <span class="sep"></span>
+      <button data-insert="link">链接</button>
+      <button id="btn-image">图片</button>
+      <span class="sep"></span>
+      <button id="btn-save" class="primary">保存 (Ctrl+S)</button>
+      <button id="btn-delete" class="danger">删除</button>
+      <span class="hint" id="toolbar-hint">Markdown：单换行 = &lt;br&gt;，可直接写 HTML</span>
+    </div>
+
+    <div class="workspace">
+      <textarea id="content" spellcheck="false" placeholder="开始写吧…
+
+## 小标题
+正文段落，**加粗**、`行内代码`、[链接](https://example.com)
+
+- 列表项
+- 列表项
+
+```bash
+docker compose up -d
+```"></textarea>
+      <div class="preview" id="preview">
+        <iframe id="preview-frame" title="预览"></iframe>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span class="dot" id="status-dot"></span>
+  <span class="msg" id="status-msg">就绪</span>
+  <span class="right">
+    <span id="edit-state">未选中文章</span>
+    <span id="count-info"></span>
+  </span>
+</footer>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <h3 id="modal-title">确认</h3>
+    <p id="modal-text"></p>
+    <div id="modal-extra"></div>
+    <div class="actions">
+      <button id="modal-cancel">取消</button>
+      <button id="modal-ok" class="primary">确定</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept="image/*" multiple hidden>
+
+<script src="/admin/app.js"></script>
+</body>
+</html>
