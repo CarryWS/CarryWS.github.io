@@ -45,7 +45,7 @@ test('posts: 能解析现有文章的元信息与正文', async () => {
   assert.equal(post.mode, 'html');
   assert.match(post.content, /爆炸谷/);
   assert.ok(!post.content.includes('<h1>'), '正文不应包含标题');
-  assert.ok(!post.content.includes('← Blog'), '正文不应包含返回链接');
+  assert.ok(!post.content.includes('← Back'), '正文不应包含返回链接');
 });
 
 test('posts: 生成的文章可以再次解析（往返一致）', async () => {
@@ -89,11 +89,15 @@ test('posts: 索引页只收录非草稿并按日期倒序', () => {
   assert.match(html, /共 2 篇文章/);
 });
 
-test('posts: 现有 blog.html 与生成结果结构一致', async () => {
+test('posts: 现有 blog.html 与生成结果逐字节一致', async () => {
+  const fs = require('fs');
   const list = await posts.listPosts({ includeDrafts: false });
   assert.ok(list.length >= 4, '至少应识别出 4 篇文章');
   const html = posts.buildIndexHtml(list);
   for (const post of list) {
     assert.ok(html.includes(`blog/${post.slug}`), `${post.slug} 应出现在索引中`);
   }
+  // blog.html 是生成物：磁盘上的内容必须与 buildIndex 的输出完全一致（忽略换行差异）
+  const onDisk = fs.readFileSync(posts.INDEX_FILE, 'utf8').replace(/\r\n/g, '\n');
+  assert.equal(html.replace(/\r\n/g, '\n'), onDisk, 'blog.html 与生成结果不一致：别手工改它，跑一次「重建索引」');
 });

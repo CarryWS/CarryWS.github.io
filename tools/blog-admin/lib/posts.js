@@ -220,7 +220,7 @@ function buildPostHtml(post) {
   return [
     ...head,
     '<body>',
-    '  <p><a href="/blog.html">← Blog</a></p>',
+    '  <p><a href="/blog.html">← Back</a></p>',
     `  <h1>${escapeHtml(title)}</h1>`,
     `  <p class="date">${date}</p>`,
     '',
@@ -434,7 +434,7 @@ ${INDEX_STYLE}
 </style>
 </head>
 <body>
-  <p class="back"><a href="/">← ${SITE_NAME}</a></p>
+  <p class="back"><a href="/">← Back</a></p>
   <h1>Blog</h1>
   <input id="search" class="search" type="search" placeholder="搜索标题、标签或摘要…" autocomplete="off">
   <p class="count" id="count">共 ${published.length} 篇文章</p>

@@ -96,7 +96,7 @@ HTML 模式下工具栏会插入对应的 HTML 标签。
   ...
 </head>
 <body>
-  <p><a href="/blog.html">← Blog</a></p>
+  <p><a href="/blog.html">← Back</a></p>
   <h1>标题</h1>
   <p class="date">2026-09-15</p>
 
