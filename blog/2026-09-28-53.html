@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>53 万次撞门：给服务器做了一次安全体检 | CarryWS</title>
+<meta name="description" content="两台服务器加起来被撞了 53 万次门。我数了一遍日志，顺手把一个正在被境外 IP 爆破的暴露面干掉了。">
+<meta name="keywords" content="服务器, 安全, WireGuard, 运维">
+<meta name="post-date" content="2026-09-28">
+<meta name="post-time" content="11:54:30">
+<meta name="author" content="CarryWS">
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+  html { background: black; }
+  body { color: #6C7486; font-family: "Courier New", monospace;
+         max-width: 720px; margin: 0 auto; padding: 60px 24px; line-height: 1.8; }
+  a { color: #99A3BA; text-decoration: none; border-bottom: 1px dotted #6C7486; }
+  a:hover { color: #E4ECFA; }
+  h1 { color: #E4ECFA; font-size: 26px; letter-spacing: 1px; }
+  h2 { color: #E4ECFA; font-size: 18px; margin-top: 32px; }
+  h3 { color: #E4ECFA; font-size: 16px; margin-top: 24px; }
+  .date { color: #3F4656; font-size: 13px; }
+  code { background: #111; padding: 2px 6px; color: #99A3BA; }
+  pre { background: #111; padding: 12px; overflow-x: auto; color: #99A3BA; }
+  pre code { background: none; padding: 0; }
+  img { max-width: 100%; border: 1px solid #242836; }
+  blockquote { border-left: 2px solid #242836; margin-left: 0; padding-left: 14px; color: #3F4656; }
+  hr { border: none; border-top: 1px solid #242836; margin: 28px 0; }
+  ul, ol { padding-left: 22px; }
+  table { border-collapse: collapse; }
+  th, td { border: 1px solid #242836; padding: 4px 10px; }
+  .tags { margin-top: 40px; font-size: 13px; color: #3F4656; }
+  .tags span { border: 1px solid #242836; padding: 1px 8px; margin-right: 6px; }
+  ::selection { background: #222; color: #99A3BA; }
+</style>
+</head>
+<body>
+  <p><a href="/blog.html">← Back</a></p>
+  <h1>53 万次撞门：给服务器做了一次安全体检</h1>
+  <p class="date">2026-09-28</p>
+
+<p>起因很平常。我想把家里那台小主机接进刚建好的虚拟内网，顺手去云服务器上翻日志，看看有哪些服务在跑、要不要调整规划。</p>
+<p>然后我就愣住了。</p>
+<p>这台机器从 8 月 9 号开机到现在，<strong>SSH 一共被撞了 32 万次门</strong>。</p>
+<p>我平时基本不看这些日志。这次认真数了一遍，顺手把该堵的洞都堵了。记一笔，也算给以后的自己留个参考。</p>
+<hr>
+<h2>一、SSH：32 万次</h2>
+<pre><code>统计跨度    2026-08-09 → 2026-09-28（50 天）
+失败总数    326,373
+唯一源 IP   2,131
+成功入侵    0</code></pre>
+<p>平均每天 6,527 次。头号攻击者是 <code>82.115.30.245</code>（德国法兰克福，Kirino LLC），一个人贡献了 31,977 次，占全站将近 10%。</p>
+<pre><code>Aug 13 21:34:16  Connection closed by authenticating user root 82.115.30.245 [preauth]
+Aug 13 21:34:18  authentication failure; rhost=82.115.30.245  user=root
+Aug 13 21:34:20  Failed password for root from 82.115.30.245 port 55434 ssh2</code></pre>
+<p>被猜最多的用户名是 <code>ubuntu</code>(4732)、<code>user</code>(4166)、<code>test</code>(2234)、<code>debian</code>(1893)、<code>deploy</code>(1460)。有意思的是里面还有 <code>minecraft</code>(486) —— 扫描器知道这台机器在开游戏服。</p>
+<p>比较好笑的是：<strong>95% 的尝试打在了根本不存在的用户名上</strong>（73,174 次无效用户名 vs 3,443 次打到真实用户 <code>admin</code>）。</p>
+<h3>这重要吗？不重要</h3>
+<p>我的 SSH 早就配好了：</p>
+<pre><code>passwordauthentication no
+permitrootlogin no
+kbdinteractiveauthentication no
+permitemptypasswords no
+maxauthtries 6</code></pre>
+<p><strong>只认 ed25519 密钥。</strong> 32 万次撞不开，因为那需要的不是 32 万次，是 2^128 次。</p>
+<p>所以这 32 万次的性质是：<strong>噪音</strong>。它消耗的是我的日志磁盘和 CPU 时间片，不是我的安全性。</p>
+<hr>
+<h2>二、nginx：一半的流量是扫描</h2>
+<p>这个才是真让我意外的。</p>
+<pre><code>统计跨度     14 天
+总请求数     41,126
+唯一来源 IP  2,532
+404 响应     20,016   （48.7%）</code></pre>
+<p><strong>接近一半的请求是 404</strong> —— 也就是说，一半的流量来自扫描器。</p>
+<pre><code> 8,194 次  /.env 探测      ← 头号目标
+ 6,995 次  /.git 探测      ← 第二
+   754 次  /wp-* 探测</code></pre>
+<p>它们是来找<strong>泄漏的密钥</strong>的：<code>/.env</code>、<code>/.env.local</code>、<code>/.env.production</code>、<code>/.env.bak</code>、<code>/api/.env</code>、<code>/backend/.env</code>，一共 16 种变体，专找 Laravel / PHP 项目里那个装着数据库密码的文件。</p>
+<hr>
+<h2>三、一个真实的漏洞</h2>
+<p>上面那 6,995 次 <code>.git</code> 探测里，<strong>有 492 次返回了 HTTP 200</strong>。</p>
+<p>因为我用 <code>git clone</code> 把站点拉到 <code>/opt/site/</code> 部署，<code>.git</code> 目录就一起待在了<strong>网站根目录里</strong>。nginx 老老实实地把它端了出去：</p>
+<pre><code>  117  /.git/config     200    ← 泄漏仓库地址和邮箱
+   51  /.git/HEAD       200
+   27  /.git/index      200
+   24  /.git/logs/HEAD  200    ← 泄漏本地提交活动
+  142 个 git object 文件被反复下载（共 2,111 次请求）</code></pre>
+<p><code>.git/objects</code> 被下载了 2,111 次。理论上，拿到足够多的 object 就能<strong>完整还原仓库历史</strong>，包括那些你提交过、后来又删掉的文件。而这个仓库的历史里确实有一批被删掉的旧文件。</p>
+<h3>但这次影响是低的</h3>
+<p>我先去查了一件事，再下结论：</p>
+<pre><code>$ curl -s https://api.github.com/repos/CarryWS/CarryWS.github.io | grep private
+  &quot;private&quot;: false,
+  &quot;visibility&quot;: &quot;public&quot;,</code></pre>
+<p><strong>仓库本来就是公开的。</strong> 那些&quot;被泄漏&quot;的历史文件，任何人在 GitHub 上 clone 一下就能拿到 —— 已经公开很久了。</p>
+<p>所以我差点犯了个错：只看&quot;492 次敏感路径返回 200、2,111 次 object 下载&quot;，很容易得出&quot;源码仓库被拖库&quot;的惊悚结论。<strong>实际去查一下，结论完全不同。</strong></p>
+<p>另外也确认了：整个仓库历史里<strong>没有任何密钥或口令</strong>（唯一命中的是 CSS 里的 <code>input[type=password]</code>，以及我博客工具自己写的 <code>BLOCKED</code> 过滤器 —— 说明当初写的时候确实防着这一类）。</p>
+<p><strong>不过还是修了</strong>，因为 6,995 次探测是实打实的日志噪音，而且万一哪天仓库改成私有，网站根目录里的 <code>.git</code> 就成了真漏洞：</p>
+<pre><code class="language-nginx">location ~ /\.(?!well-known) {
+    deny all;
+    access_log off;
+    log_not_found off;
+}</code></pre>
+<p>现在全部 403，网站功能零误伤，Let&#39;s Encrypt 的证书续期路径也没被挡住。</p>
+<hr>
+<h2>四、frp：有人在猜我的 token</h2>
+<pre><code>157 次  register control error: token in login doesn&#39;t match token from configuration
+  0 次  client login success</code></pre>
+<p>这是我在 7000 端口上暴露的 frp 服务端，有人在反复试 token。</p>
+<p>而这正好说明为什么我在同一天把 token 换掉了 —— 不是&quot;以防万一&quot;，是<strong>确实有人在试</strong>。</p>
+<hr>
+<h2>五、我犯的一个错误</h2>
+<p>查 SSH 那波的时候，我一度很紧张，跟人说&quot;服务器正在被暴力破解&quot;。</p>
+<p>然后被一句话怼回来了：</p>
+<blockquote><p>能暴力破解 id_ed25519 密钥的你是这个👍，比量子计算机还牛</p></blockquote>
+<p><strong>他是对的。</strong> 我把&quot;门口有人反复拧门把手&quot;讲成了&quot;门快被踹开了&quot;。</p>
+<p>后来认真算了一下：256 位椭圆曲线密钥，暴力破解需要 2^128 量级的运算，宇宙热寂都跑不完。<strong>那 32 万次尝试从一开始就不可能成功，它们连&quot;威胁&quot;都算不上，只是背景噪音。</strong></p>
+<p>这件事给我的教训不是&quot;要多看日志&quot;，而是：<strong>看到异常数字时，先搞清楚它的性质，再决定它的严重程度。数字大不等于危险大。</strong></p>
+<p>不过顺着这条线，倒是挖出一个真问题：</p>
+<p>那 13 万次打到另一台服务器（通过 frp 转发）的爆破，<strong>源 IP 全部被 frp 抹成了 <code>127.0.0.1</code></strong>：</p>
+<pre><code>106,254 次来自 127.0.0.1</code></pre>
+<p>这意味着那边<strong>就算装了 fail2ban 也永远封不掉</strong> —— 它看到的攻击源是 localhost，封了等于把自己封了。这是一个<strong>无法通过配置修复的结构性缺陷</strong>。</p>
+<p>关掉 frp、改用 WireGuard 之后，真实源 IP 被保留了（现在是 <code>10.8.0.2</code>），而且攻击流量直接归零。</p>
+<hr>
+<h2>六、顺手做成的事</h2>
+<p>这次本来只是&quot;想把第二台服务器接进虚拟内网&quot;，结果一路做下来变成了安全整改：</p>
+<pre><code>✅ 关掉 frp          → 消除了 133,900 次爆破 + 157 次 token 猜测的入口
+✅ 轮换弱凭据        → token 和面板密码换成随机值
+✅ 补上 nginx 拦截   → .git / .env 全部 403
+✅ 三节点虚拟内网    → 10.8.0.1 / .2 / .3 互通，SSH 不再暴露公网</code></pre>
+<p>第三台机器（家里那台 M720q）现在是 <code>10.8.0.3</code>，从公网完全不可达：</p>
+<pre><code>113.27.x.x:22     closed
+113.27.x.x:8787   closed
+113.27.x.x:6099   closed
+113.27.x.x:25565  closed</code></pre>
+<p>网站的性能监测卡片也顺势从 frp 转发改成了 nginx 反代走 WireGuard 隧道 —— 路径、域名、CORS 全不变，网页代码一个字没改，但现在它走 HTTPS 了。</p>
+<hr>
+<h2>七、几条结论</h2>
+<p><strong>1. 互联网背景噪音是常态，不是事件</strong></p>
+<p>两台机器加起来 53 万次认证失败，<strong>没有一次是冲着我来的</strong>。都是自动化扫描器在 IPv4 地址空间里无差别地扫。</p>
+<p>而且我观察到一个有意思的现象：<strong>扫 Web 的和撞 SSH 的是两拨完全不相干的人</strong>。头号 SSH 攻击者在 nginx 上 0 次记录，头号 Web 扫描器在 SSH 上 0 次记录。这是两个独立的地下产业，各自扫各自的。</p>
+<p><strong>2. 真正的安全边界是配置，不是监控</strong></p>
+<p>我几十天没看日志，代价是什么？<strong>几乎为零。</strong> 因为 <code>PasswordAuthentication no</code> 这一条配置就把整类攻击彻底废掉了。</p>
+<p>反过来，如果密码登录开着，我每天看十遍日志也没用 —— 早晚会被撞开。</p>
+<p><strong>3. 数字大不等于危险大</strong></p>
+<p>32 万次、48% 的 404、2,111 次 object 下载，每一个单看都很吓人。但查清楚性质之后：一个是无效的，一个是背景噪音，最后一个因为仓库公开所以无影响。</p>
+<p><strong>先查证，再定性。</strong></p>
+<p><strong>4. 有些东西是&quot;看起来没坏但已经坏了&quot;</strong></p>
+<p>frp 那个源 IP 丢失的问题，不查日志根本发现不了。它不影响任何功能，只是让你的防御手段<strong>静默失效</strong>。这类问题最值得花时间找。</p>
+<hr>
+<p>差不多就这些。写下来主要是提醒自己：<strong>服务器跑起来容易，跑得干净是另一回事。</strong></p>
+<p>（顺便，这次把一个正在被境外 IP 爆破的暴露面彻底干掉了 —— 从&quot;看不见&quot;变成&quot;不存在&quot;，比从&quot;看不见&quot;变成&quot;看得见&quot;有用得多。）</p>
+
+  <p class="tags"><span>服务器</span><span>安全</span><span>WireGuard</span><span>运维</span></p>
+
+  <template id="blog-source">起因很平常。我想把家里那台小主机接进刚建好的虚拟内网，顺手去云服务器上翻日志，看看有哪些服务在跑、要不要调整规划。
+
+然后我就愣住了。
+
+这台机器从 8 月 9 号开机到现在，**SSH 一共被撞了 32 万次门**。
+
+我平时基本不看这些日志。这次认真数了一遍，顺手把该堵的洞都堵了。记一笔，也算给以后的自己留个参考。
+
+---
+
+## 一、SSH：32 万次
+
+```
+统计跨度    2026-08-09 → 2026-09-28（50 天）
+失败总数    326,373
+唯一源 IP   2,131
+成功入侵    0
+```
+
+平均每天 6,527 次。头号攻击者是 `82.115.30.245`（德国法兰克福，Kirino LLC），一个人贡献了 31,977 次，占全站将近 10%。
+
+```
+Aug 13 21:34:16  Connection closed by authenticating user root 82.115.30.245 [preauth]
+Aug 13 21:34:18  authentication failure; rhost=82.115.30.245  user=root
+Aug 13 21:34:20  Failed password for root from 82.115.30.245 port 55434 ssh2
+```
+
+被猜最多的用户名是 `ubuntu`(4732)、`user`(4166)、`test`(2234)、`debian`(1893)、`deploy`(1460)。有意思的是里面还有 `minecraft`(486) —— 扫描器知道这台机器在开游戏服。
+
+比较好笑的是：**95% 的尝试打在了根本不存在的用户名上**（73,174 次无效用户名 vs 3,443 次打到真实用户 `admin`）。
+
+### 这重要吗？不重要
+
+我的 SSH 早就配好了：
+
+```
+passwordauthentication no
+permitrootlogin no
+kbdinteractiveauthentication no
+permitemptypasswords no
+maxauthtries 6
+```
+
+**只认 ed25519 密钥。** 32 万次撞不开，因为那需要的不是 32 万次，是 2^128 次。
+
+所以这 32 万次的性质是：**噪音**。它消耗的是我的日志磁盘和 CPU 时间片，不是我的安全性。
+
+---
+
+## 二、nginx：一半的流量是扫描
+
+这个才是真让我意外的。
+
+```
+统计跨度     14 天
+总请求数     41,126
+唯一来源 IP  2,532
+404 响应     20,016   （48.7%）
+```
+
+**接近一半的请求是 404** —— 也就是说，一半的流量来自扫描器。
+
+```
+ 8,194 次  /.env 探测      ← 头号目标
+ 6,995 次  /.git 探测      ← 第二
+   754 次  /wp-* 探测
+```
+
+它们是来找**泄漏的密钥**的：`/.env`、`/.env.local`、`/.env.production`、`/.env.bak`、`/api/.env`、`/backend/.env`，一共 16 种变体，专找 Laravel / PHP 项目里那个装着数据库密码的文件。
+
+---
+
+## 三、一个真实的漏洞
+
+上面那 6,995 次 `.git` 探测里，**有 492 次返回了 HTTP 200**。
+
+因为我用 `git clone` 把站点拉到 `/opt/site/` 部署，`.git` 目录就一起待在了**网站根目录里**。nginx 老老实实地把它端了出去：
+
+```
+  117  /.git/config     200    ← 泄漏仓库地址和邮箱
+   51  /.git/HEAD       200
+   27  /.git/index      200
+   24  /.git/logs/HEAD  200    ← 泄漏本地提交活动
+  142 个 git object 文件被反复下载（共 2,111 次请求）
+```
+
+`.git/objects` 被下载了 2,111 次。理论上，拿到足够多的 object 就能**完整还原仓库历史**，包括那些你提交过、后来又删掉的文件。而这个仓库的历史里确实有一批被删掉的旧文件。
+
+### 但这次影响是低的
+
+我先去查了一件事，再下结论：
+
+```
+$ curl -s https://api.github.com/repos/CarryWS/CarryWS.github.io | grep private
+  &quot;private&quot;: false,
+  &quot;visibility&quot;: &quot;public&quot;,
+```
+
+**仓库本来就是公开的。** 那些&quot;被泄漏&quot;的历史文件，任何人在 GitHub 上 clone 一下就能拿到 —— 已经公开很久了。
+
+所以我差点犯了个错：只看&quot;492 次敏感路径返回 200、2,111 次 object 下载&quot;，很容易得出&quot;源码仓库被拖库&quot;的惊悚结论。**实际去查一下，结论完全不同。**
+
+另外也确认了：整个仓库历史里**没有任何密钥或口令**（唯一命中的是 CSS 里的 `input[type=password]`，以及我博客工具自己写的 `BLOCKED` 过滤器 —— 说明当初写的时候确实防着这一类）。
+
+**不过还是修了**，因为 6,995 次探测是实打实的日志噪音，而且万一哪天仓库改成私有，网站根目录里的 `.git` 就成了真漏洞：
+
+```nginx
+location ~ /\.(?!well-known) {
+    deny all;
+    access_log off;
+    log_not_found off;
+}
+```
+
+现在全部 403，网站功能零误伤，Let&#39;s Encrypt 的证书续期路径也没被挡住。
+
+---
+
+## 四、frp：有人在猜我的 token
+
+```
+157 次  register control error: token in login doesn&#39;t match token from configuration
+  0 次  client login success
+```
+
+这是我在 7000 端口上暴露的 frp 服务端，有人在反复试 token。
+
+而这正好说明为什么我在同一天把 token 换掉了 —— 不是&quot;以防万一&quot;，是**确实有人在试**。
+
+---
+
+## 五、我犯的一个错误
+
+查 SSH 那波的时候，我一度很紧张，跟人说&quot;服务器正在被暴力破解&quot;。
+
+然后被一句话怼回来了：
+
+&gt; 能暴力破解 id_ed25519 密钥的你是这个👍，比量子计算机还牛
+
+**他是对的。** 我把&quot;门口有人反复拧门把手&quot;讲成了&quot;门快被踹开了&quot;。
+
+后来认真算了一下：256 位椭圆曲线密钥，暴力破解需要 2^128 量级的运算，宇宙热寂都跑不完。**那 32 万次尝试从一开始就不可能成功，它们连&quot;威胁&quot;都算不上，只是背景噪音。**
+
+这件事给我的教训不是&quot;要多看日志&quot;，而是：**看到异常数字时，先搞清楚它的性质，再决定它的严重程度。数字大不等于危险大。**
+
+不过顺着这条线，倒是挖出一个真问题：
+
+那 13 万次打到另一台服务器（通过 frp 转发）的爆破，**源 IP 全部被 frp 抹成了 `127.0.0.1`**：
+
+```
+106,254 次来自 127.0.0.1
+```
+
+这意味着那边**就算装了 fail2ban 也永远封不掉** —— 它看到的攻击源是 localhost，封了等于把自己封了。这是一个**无法通过配置修复的结构性缺陷**。
+
+关掉 frp、改用 WireGuard 之后，真实源 IP 被保留了（现在是 `10.8.0.2`），而且攻击流量直接归零。
+
+---
+
+## 六、顺手做成的事
+
+这次本来只是&quot;想把第二台服务器接进虚拟内网&quot;，结果一路做下来变成了安全整改：
+
+```
+✅ 关掉 frp          → 消除了 133,900 次爆破 + 157 次 token 猜测的入口
+✅ 轮换弱凭据        → token 和面板密码换成随机值
+✅ 补上 nginx 拦截   → .git / .env 全部 403
+✅ 三节点虚拟内网    → 10.8.0.1 / .2 / .3 互通，SSH 不再暴露公网
+```
+
+第三台机器（家里那台 M720q）现在是 `10.8.0.3`，从公网完全不可达：
+
+```
+113.27.x.x:22     closed
+113.27.x.x:8787   closed
+113.27.x.x:6099   closed
+113.27.x.x:25565  closed
+```
+
+网站的性能监测卡片也顺势从 frp 转发改成了 nginx 反代走 WireGuard 隧道 —— 路径、域名、CORS 全不变，网页代码一个字没改，但现在它走 HTTPS 了。
+
+---
+
+## 七、几条结论
+
+**1. 互联网背景噪音是常态，不是事件**
+
+两台机器加起来 53 万次认证失败，**没有一次是冲着我来的**。都是自动化扫描器在 IPv4 地址空间里无差别地扫。
+
+而且我观察到一个有意思的现象：**扫 Web 的和撞 SSH 的是两拨完全不相干的人**。头号 SSH 攻击者在 nginx 上 0 次记录，头号 Web 扫描器在 SSH 上 0 次记录。这是两个独立的地下产业，各自扫各自的。
+
+**2. 真正的安全边界是配置，不是监控**
+
+我几十天没看日志，代价是什么？**几乎为零。** 因为 `PasswordAuthentication no` 这一条配置就把整类攻击彻底废掉了。
+
+反过来，如果密码登录开着，我每天看十遍日志也没用 —— 早晚会被撞开。
+
+**3. 数字大不等于危险大**
+
+32 万次、48% 的 404、2,111 次 object 下载，每一个单看都很吓人。但查清楚性质之后：一个是无效的，一个是背景噪音，最后一个因为仓库公开所以无影响。
+
+**先查证，再定性。**
+
+**4. 有些东西是&quot;看起来没坏但已经坏了&quot;**
+
+frp 那个源 IP 丢失的问题，不查日志根本发现不了。它不影响任何功能，只是让你的防御手段**静默失效**。这类问题最值得花时间找。
+
+---
+
+差不多就这些。写下来主要是提醒自己：**服务器跑起来容易，跑得干净是另一回事。**
+
+（顺便，这次把一个正在被境外 IP 爆破的暴露面彻底干掉了 —— 从&quot;看不见&quot;变成&quot;不存在&quot;，比从&quot;看不见&quot;变成&quot;看得见&quot;有用得多。）</template>
+
+</body>
+</html>
