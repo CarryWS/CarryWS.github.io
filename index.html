@@ -10,6 +10,7 @@
   <script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script>
   <link rel="stylesheet" type="text/css" href="assets/css/main.css"/>
   <link rel="stylesheet" type="text/css" href="assets/css/jquery.terminal.min.css"/>
+  <link rel="stylesheet" type="text/css" href="assets/vendors/aplayer/APlayer.min.css"/>
   <link rel="icon" type="image/png" href="favicon.png">
   <style>
     /* 终端容器 */
@@ -20,6 +21,10 @@
       border-radius: 6px;
       overflow: hidden;
       border: 1px solid #242836;
+    }
+    #terminal,
+    #terminal * {
+      font-family: "Courier New", Courier, monospace !important;  
     }
     /* 覆盖 jQuery Terminal 默认背景，融入页面 */
     #terminal .terminal,
@@ -70,19 +75,97 @@
     #music-box .music-close:hover {
       color: #58a6ff;
     }
-    #music-box.collapsed iframe {
+    #music-box.collapsed #music-player {
       display: none;
     }
     #music-box.collapsed {
       width: auto;
       min-width: 150px;
     }
-    #music-box iframe {
+    #music-box #music-player {
       display: block;
-      width: 330px;
-      height: 430px;
-      border: 0;
+      width: 100%;
       background: #0a0c12;
+    }
+    /* ---- APlayer 深色化，融入页面风格 ---- */
+    #music-box .aplayer {
+      margin: 0;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      color: #c9d1d9;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    #music-box .aplayer .aplayer-info {
+      border-bottom: 1px solid #2a2f3a;
+    }
+    #music-box .aplayer .aplayer-info .aplayer-music .aplayer-title {
+      color: #c9d1d9;
+      font-size: 13px;
+    }
+    #music-box .aplayer .aplayer-info .aplayer-music .aplayer-author {
+      color: #7ee787;
+      font-size: 11px;
+    }
+    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-time {
+      color: #565d6e;
+    }
+    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap {
+      background: #1b1f27;
+    }
+    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar {
+      background: #2a2f3a;
+    }
+    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar .aplayer-loaded {
+      background: #3b4250;
+    }
+    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-volume-wrap .aplayer-volume-bar-wrap .aplayer-volume-bar {
+      background: #2a2f3a;
+    }
+    #music-box .aplayer .aplayer-list {
+      background: #0d1017;
+      border-top: 1px solid #2a2f3a;
+    }
+    #music-box .aplayer .aplayer-list ol {
+      border-top: 0;
+    }
+    #music-box .aplayer .aplayer-list ol li {
+      border-top: 1px solid #1b1f27;
+      color: #8b949e;
+      font-size: 12px;
+      height: 32px;
+      line-height: 32px;
+    }
+    #music-box .aplayer .aplayer-list ol li:hover {
+      background: #161b22;
+    }
+    #music-box .aplayer .aplayer-list ol li.aplayer-list-light {
+      background: #161b22;
+    }
+    #music-box .aplayer .aplayer-list ol li.aplayer-list-light .aplayer-list-title {
+      color: #58a6ff;
+    }
+    #music-box .aplayer .aplayer-list ol li .aplayer-list-index,
+    #music-box .aplayer .aplayer-list ol li .aplayer-list-author {
+      color: #565d6e;
+    }
+    #music-box .aplayer .aplayer-lrc:before,
+    #music-box .aplayer .aplayer-lrc:after {
+      display: none;
+    }
+    #music-box .aplayer .aplayer-lrc p {
+      color: #7ee787;
+      font-size: 12px;
+    }
+    #music-box #music-player .music-error {
+      padding: 14px;
+      color: #8b949e;
+      font-size: 12px;
+      line-height: 1.9;
+      word-break: break-all;
+    }
+    #music-box #music-player .music-error a {
+      color: #58a6ff;
     }
     /* M720Q 系统状态（左下角） */
     #sys-status {
@@ -173,12 +256,13 @@
       <span class="music-title">THE PURE CYBERIA...</span>
       <span class="music-close" id="music-close">−</span>
     </div>
-    <iframe src="https://music.163.com/outchain/player?type=0&amp;id=12519874787&amp;auto=0&amp;height=430" frameborder="no" marginwidth="0" marginheight="0" allowtransparency="true"></iframe>
+    <div id="music-player"></div>
   </div>
 
 
   <script src="assets/vendors/jquery-3.3.1.min.js"></script>
   <script src="assets/vendors/jquery.terminal.min.js"></script>
+  <script src="assets/vendors/aplayer/APlayer.min.js"></script>
   <script>
     $(function () {
       var SLIDE_IN_DOWN = { opacity: 1, top: 0 };
@@ -323,10 +407,10 @@
             this.echo('');
             this.echo('  [[b;cyan;]Available commands:]');
             this.echo('  [[b;yellow;]help]       Show this message');
-            this.echo('  [[b;yellow;]ls]   List directory')
+            this.echo('  [[b;yellow;]ls]         List directory')
             this.echo('  [[b;yellow;]whoami]     Who am I');
             this.echo('  [[b;yellow;]bilibili]   Open bilibili');
-            this.echo('  [[b;yellow;]cat]   Get file context')
+            this.echo('  [[b;yellow;]cat]        Get file context')
             this.echo('  [[b;yellow;]clear]      Clear screen');
             this.echo('  [[b;yellow;]echo ...]   Echo text back');
             this.echo('');
@@ -380,6 +464,75 @@
       }
     });
 
+    // ---- 网易云歌单播放器：APlayer + Meting 公共接口（多接口自动回退）----
+    // 旧版 music.163.com/outchain/player iframe 在第三方站点跨域嵌入时会被
+    // 同源策略拦截（SecurityError: Blocked a frame ... accessing a cross-origin frame），
+    // 已弃用，改为自绘 HTML5 播放器。
+    (function () {
+      var host = document.getElementById('music-player');
+      if (!host || !window.APlayer || !window.fetch) return;
+
+      var PLAYLIST_ID = '12519874787';
+      // 按顺序尝试，第一个可用的生效；想换后端改这里即可
+      var APIS = [
+        'https://api.injahow.cn/meting/',
+        'https://meting.mysqil.com/api',
+        'https://api.i-meto.com/meting/api'
+      ];
+
+      function endpoint(api) {
+        return api + (api.indexOf('?') > -1 ? '' : '?') +
+          'server=netease&type=playlist&id=' + PLAYLIST_ID + '&r=' + Math.random();
+      }
+
+      function showError() {
+        host.innerHTML = '<div class="music-error">' +
+          '歌单加载失败：公共解析接口暂时不可用。<br>' +
+          '<a href="https://music.163.com/#/playlist?id=' + PLAYLIST_ID + '" target="_blank" rel="noopener">在网易云中打开这个歌单 →</a>' +
+          '</div>';
+      }
+
+      function load(index) {
+        if (index >= APIS.length) { showError(); return; }
+        fetch(endpoint(APIS[index]))
+          .then(function (res) {
+            if (!res.ok) throw new Error('http ' + res.status);
+            return res.json();
+          })
+          .then(function (list) {
+            if (!Array.isArray(list) || !list.length) throw new Error('empty playlist');
+            var tracks = list.map(function (t) {
+              return {
+                name: t.name || t.title || '未知曲目',
+                artist: t.artist || t.author || 'CarryWS',
+                url: t.url,
+                cover: t.cover || t.pic || '',
+                lrc: t.lrc || t.lyric || '',
+                type: 'normal'
+              };
+            }).filter(function (t) {
+              return !!t.url;
+            });
+            if (!tracks.length) throw new Error('no playable url');
+
+            new APlayer({
+              container: host,
+              audio: tracks,
+              theme: '#58a6ff',
+              lrcType: 3,
+              preload: 'none',
+              mutex: true,
+              listFolded: false,
+              listMaxHeight: '300px',
+              storageName: 'carryws-music'
+            });
+          })
+          .catch(function () { load(index + 1); });
+      }
+
+      load(0);
+    })();
+
     // ---- 网易云歌单悬浮方块：拖拽 + 位置记忆 ----
     (function () {
       var box = document.getElementById('music-box');
@@ -391,6 +544,9 @@
       try {
         var saved = JSON.parse(localStorage.getItem('musicBoxPos'));
         if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') {
+          // 视口变小后旧坐标可能把方块挤到屏幕外，恢复时先夹回可视范围
+          saved.left = Math.max(0, Math.min(saved.left, window.innerWidth - box.offsetWidth));
+          saved.top = Math.max(0, Math.min(saved.top, window.innerHeight - box.offsetHeight));
           box.style.right = 'auto';
           box.style.left = saved.left + 'px';
           box.style.top = saved.top + 'px';
