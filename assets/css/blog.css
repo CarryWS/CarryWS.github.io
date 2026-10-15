@@ -1,0 +1,223 @@
+/*
+ * 博客样式（blog.html 列表页 + blog/*.html 文章页共用）
+ *
+ * 颜色不写死在这里，一律引用 theme.css 的 token，
+ * 所以深浅切换只需要 theme.css 一份变量。
+ *
+ * 博客专属的几个 token 在 theme.css 里没有：
+ *   --blog-code / --blog-code-inline / --blog-quote / --blog-image-border / --blog-text-shadow
+ * 深色值定义在本文件顶部，浅色值在下方两个覆盖块里。
+ */
+
+:root {
+  --blog-code: #111;
+  --blog-code-inline: #111;
+  --blog-quote: var(--fg-dim);
+  --blog-image-border: var(--line);
+  --blog-text-shadow: none;
+}
+
+html[data-theme="light"] {
+  --blog-code: #FFFFFF;
+  --blog-code-inline: #EDF0F4;
+  --blog-quote: #6E7684;
+  --blog-image-border: #DCE0E6;
+  --blog-text-shadow: 0 0 1px rgba(23, 28, 38, .16);
+}
+
+/* 无 JS 时跟随系统偏好（token 主体在 theme.css 里覆盖） */
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) {
+    --blog-code: #FFFFFF;
+    --blog-code-inline: #EDF0F4;
+    --blog-quote: #6E7684;
+    --blog-image-border: #DCE0E6;
+    --blog-text-shadow: 0 0 1px rgba(23, 28, 38, .16);
+  }
+}
+
+/* ---------------------------------------------------------------- 基础版式 */
+html {
+  background: var(--bg);
+}
+
+body {
+  font-family: "Courier New", monospace;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 60px 24px;
+  line-height: 1.8;
+  color: var(--fg);
+  background: var(--bg);
+  text-shadow: var(--blog-text-shadow);
+  transition: background-color .3s ease, color .3s ease;
+}
+
+h1 {
+  color: var(--fg-strong);
+  font-size: 26px;
+  letter-spacing: 1px;
+  margin: 0 0 8px;
+}
+
+h2 {
+  color: var(--fg-strong);
+  font-size: 18px;
+  margin-top: 32px;
+}
+
+h3 {
+  color: var(--fg-strong);
+  font-size: 16px;
+  margin-top: 24px;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--fg);
+  transition: color .3s ease, border-color .3s ease;
+}
+
+a:hover {
+  color: var(--link-hover);
+  border-bottom-color: var(--link);
+}
+
+.date {
+  color: var(--fg-dim);
+  font-size: 13px;
+}
+
+code {
+  background: var(--blog-code-inline);
+  padding: 2px 6px;
+  color: var(--link);
+  border: 1px solid var(--line);
+}
+
+pre {
+  background: var(--blog-code);
+  border: 1px solid var(--line);
+  padding: 12px;
+  overflow-x: auto;
+  color: var(--link);
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+img {
+  max-width: 100%;
+  border: 1px solid var(--blog-image-border);
+}
+
+blockquote {
+  border-left: 2px solid var(--line);
+  margin-left: 0;
+  padding-left: 14px;
+  color: var(--blog-quote);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 28px 0;
+}
+
+ul, ol { padding-left: 22px; }
+
+table { border-collapse: collapse; }
+
+th, td {
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+}
+
+.tags {
+  margin-top: 40px;
+  font-size: 13px;
+  color: var(--fg-dim);
+}
+
+.tags span {
+  border: 1px solid var(--line);
+  padding: 1px 8px;
+  margin-right: 6px;
+}
+
+/* ---------------------------------------------------------------- 返回链接 */
+.back {
+  font-size: 14px;
+  margin: 0 0 24px;
+}
+
+/* ---------------------------------------------------------------- 列表页 */
+h1 + .search { margin-top: 14px; }
+
+.search {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--panel);
+  color: var(--fg-strong);
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  margin: 6px 0 10px;
+  outline: none;
+  transition: border-color .3s ease, background-color .3s ease, color .3s ease;
+}
+
+.search::placeholder { color: var(--fg-dim); }
+
+.search:focus { border-color: var(--accent); }
+
+.count {
+  font-size: 13px;
+  color: var(--fg-dim);
+  margin: 0 0 12px;
+}
+
+.post {
+  border-bottom: 1px solid var(--line);
+  padding: 18px 0;
+}
+
+.post h2 {
+  font-size: 18px;
+  margin: 0 0 6px;
+}
+
+.post h2 a {
+  color: var(--fg-strong);
+  border: none;
+}
+
+.post h2 a:hover { color: var(--link); }
+
+.summary {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+
+.tag {
+  font-size: 12px;
+  color: var(--fg-dim);
+  border: 1px solid var(--line);
+  padding: 0 6px;
+  margin-left: 8px;
+}
+
+.empty {
+  color: var(--fg-dim);
+  font-style: italic;
+}
+
+@media (max-width: 480px) {
+  body { padding: 48px 16px; }
+  h1 { font-size: 22px; }
+}

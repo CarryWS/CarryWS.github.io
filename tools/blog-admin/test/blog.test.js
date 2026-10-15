@@ -134,3 +134,52 @@ test('posts: 同一天按 post-time 倒序，无时间的最后按文件名', ()
   const sorted = list.slice().sort(posts.comparePosts).map((p) => p.slug);
   assert.deepEqual(sorted, ['d.html', 'b.html', 'c.html', 'a.html']);
 });
+
+test('posts: 文章模板带主题切换按钮与外链样式', () => {
+  const html = posts.buildPostHtml({
+    slug: 'x.html',
+    title: 'T',
+    date: '2026-01-02',
+    tags: [],
+    draft: false,
+    mode: 'markdown',
+    content: '正文',
+  });
+  assert.match(html, /class="theme-toggle"/, '文章页应有主题切换按钮');
+  assert.match(html, /\/assets\/css\/theme\.css/, '应引用共享主题变量');
+  assert.match(html, /\/assets\/css\/blog\.css/, '应引用博客样式');
+  assert.match(html, /\/assets\/js\/theme\.js/, '应引用切换脚本');
+  assert.match(html, /localStorage\.getItem\('theme'\)/, '首屏应提前落定 data-theme，避免闪白');
+  assert.ok(!/<style>/.test(html), '不应再内联写死深色样式');
+
+  const index = posts.buildIndexHtml([
+    { slug: 'a.html', title: 'A', date: '2026-01-01', tags: [], summary: 'sa', draft: false },
+  ]);
+  assert.match(index, /class="theme-toggle"/);
+  assert.match(index, /\/assets\/css\/blog\.css/);
+  assert.ok(!/<style>/.test(index), '索引页同样不应内联样式');
+});
+
+test('posts: 反复保存不会漂移（模板标记不会被吃进正文或重复写入）', async () => {
+  // 这条防的是：模板新增了某个标记（按钮 / 返回链接 / 日期…），
+  // 但 parsePost 不认识它，于是每次保存都把模板标记当正文再写一遍。
+  const slugs = await posts.listSlugs();
+  assert.ok(slugs.length > 0, '至少要有一篇文章才能做这个回归');
+
+  for (const slug of slugs) {
+    const html = await require('fs').promises.readFile(path.join(posts.BLOG_DIR, slug), 'utf8');
+    const once = posts.parsePost(html, slug);
+    const rebuilt = posts.buildPostHtml(once);
+    const twice = posts.parsePost(rebuilt, slug);
+
+    assert.equal(twice.content, once.content, `${slug}: 重刷后正文发生变化（模板标记泄漏进正文）`);
+    assert.equal(twice.title, once.title, `${slug}: 重刷后标题变化`);
+    assert.equal(twice.date, once.date, `${slug}: 重刷后日期变化`);
+    assert.deepEqual(twice.tags, once.tags, `${slug}: 重刷后标签变化`);
+
+    const buttons = (rebuilt.match(/class="theme-toggle"/g) || []).length;
+    assert.equal(buttons, 1, `${slug}: 主题按钮应恰好出现一次，实际 ${buttons} 次`);
+    const backs = (rebuilt.match(/href="\/blog\.html"/g) || []).length;
+    assert.equal(backs, 1, `${slug}: 返回链接应恰好出现一次，实际 ${backs} 次`);
+  }
+});

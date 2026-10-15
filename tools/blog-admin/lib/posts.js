@@ -148,7 +148,10 @@ function parsePost(html, slug) {
 
   body = body
     .replace(/<template[^>]*id=["']blog-source["'][\s\S]*?<\/template>/i, '')
-    .replace(/<p>\s*<a[^>]*href=["']\/blog\.html["'][\s\S]*?<\/a>\s*<\/p>/i, '')
+    // 主题切换按钮属于模板，不是正文；不剥掉的话下次保存会被重复写进文章
+    .replace(/<button[^>]*class=["'][^"']*\btheme-toggle\b[^"']*["'][\s\S]*?<\/button>/i, '')
+    // 返回链接属于模板，不是正文（允许带 class 等属性）
+    .replace(/<p[^>]*>\s*<a[^>]*href=["']\/blog\.html["'][\s\S]*?<\/a>\s*<\/p>/i, '')
     .replace(/<h1[^>]*>[\s\S]*?<\/h1>/i, '')
     .replace(/<p class="date"[^>]*>[\s\S]*?<\/p>/i, '')
     .replace(/<p class="tags"[^>]*>[\s\S]*?<\/p>/i, '')
@@ -169,27 +172,25 @@ function parsePost(html, slug) {
 
 // ---------------------------------------------------------------- 页面模板
 
-const POST_STYLE = `  html { background: black; }
-  body { color: #6C7486; font-family: "Courier New", monospace;
-         max-width: 720px; margin: 0 auto; padding: 60px 24px; line-height: 1.8; }
-  a { color: #99A3BA; text-decoration: none; border-bottom: 1px dotted #6C7486; }
-  a:hover { color: #E4ECFA; }
-  h1 { color: #E4ECFA; font-size: 26px; letter-spacing: 1px; }
-  h2 { color: #E4ECFA; font-size: 18px; margin-top: 32px; }
-  h3 { color: #E4ECFA; font-size: 16px; margin-top: 24px; }
-  .date { color: #3F4656; font-size: 13px; }
-  code { background: #111; padding: 2px 6px; color: #99A3BA; }
-  pre { background: #111; padding: 12px; overflow-x: auto; color: #99A3BA; }
-  pre code { background: none; padding: 0; }
-  img { max-width: 100%; border: 1px solid #242836; }
-  blockquote { border-left: 2px solid #242836; margin-left: 0; padding-left: 14px; color: #3F4656; }
-  hr { border: none; border-top: 1px solid #242836; margin: 28px 0; }
-  ul, ol { padding-left: 22px; }
-  table { border-collapse: collapse; }
-  th, td { border: 1px solid #242836; padding: 4px 10px; }
-  .tags { margin-top: 40px; font-size: 13px; color: #3F4656; }
-  .tags span { border: 1px solid #242836; padding: 1px 8px; margin-right: 6px; }
-  ::selection { background: #222; color: #99A3BA; }`;
+/** 主题按钮：两个图标都写进标记，用 CSS 按 [data-theme] 显隐，免去图标互换脚本 */
+const BLOG_BUTTON = [
+  '<button type="button" class="theme-toggle" aria-label="切换深浅色主题" title="切换深色 / 浅色">',
+  '  <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-13.5a1.25 1.25 0 0 1 1.25 1.25v1.5a1.25 1.25 0 0 1-2.5 0v-1.5A1.25 1.25 0 0 1 12 3.5zm0 13.5a1.25 1.25 0 0 1 1.25 1.25v1.5a1.25 1.25 0 0 1-2.5 0v-1.5A1.25 1.25 0 0 1 12 17zm8.5-6.25a1.25 1.25 0 0 1-1.25 1.25h-1.5a1.25 1.25 0 0 1 0-2.5h1.5A1.25 1.25 0 0 1 20.5 10.75zm-13.5 0a1.25 1.25 0 0 1-1.25 1.25h-1.5a1.25 1.25 0 0 1 0-2.5h1.5A1.25 1.25 0 0 1 7 10.75zm10.6-5.1a1.25 1.25 0 0 1 0 1.77l-1.06 1.06a1.25 1.25 0 0 1-1.77-1.77l1.06-1.06a1.25 1.25 0 0 1 1.77 0zM9.23 15.29a1.25 1.25 0 0 1 0 1.77l-1.06 1.06a1.25 1.25 0 0 1-1.77-1.77l1.06-1.06a1.25 1.25 0 0 1 1.77 0zm9.54 2.83a1.25 1.25 0 0 1-1.77 0l-1.06-1.06a1.25 1.25 0 0 1 1.77-1.77l1.06 1.06a1.25 1.25 0 0 1 0 1.77zM9.23 6.23a1.25 1.25 0 0 1-1.77 0L6.4 5.17a1.25 1.25 0 0 1 1.77-1.77l1.06 1.06a1.25 1.25 0 0 1 0 1.77z"/></svg>',
+  '  <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.7 14.6A9 9 0 0 1 9.4 3.3a9 9 0 1 0 11.3 11.3z"/></svg>',
+  '</button>',
+].join('\n');
+
+/** <head> 里的样式与首屏防闪白脚本（深浅两套颜色都在 theme.css / blog.css 里） */
+const BLOG_HEAD_ASSETS = [
+  '<link rel="stylesheet" type="text/css" href="/assets/css/theme.css">',
+  '<link rel="stylesheet" type="text/css" href="/assets/css/blog.css">',
+  // 必须在样式之后、首屏绘制之前落定 data-theme，否则浅色下会先闪一下深色
+  `<script>(function(H){var s=null;try{s=localStorage.getItem('theme')}catch(e){}` +
+    `var m=/[?&]theme=(light|dark)\\b/.exec(location.search);` +
+    `H.setAttribute('data-theme',m?m[1]:(s==='light'||s==='dark')?s:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));` +
+    `})(document.documentElement)</script>`,
+  '<script src="/assets/js/theme.js"></script>',
+].join('\n');
 
 /** 渲染正文（markdown 模式）或直接使用 HTML（html 模式） */
 function renderBody(content, mode) {
@@ -222,9 +223,7 @@ function buildPostHtml(post) {
     `<meta name="author" content="${SITE_NAME}">`,
     post.draft ? '<meta name="robots" content="noindex, nofollow">' : '',
     '<link rel="icon" type="image/png" href="/favicon.png">',
-    '<style>',
-    POST_STYLE,
-    '</style>',
+    BLOG_HEAD_ASSETS,
     '</head>',
   ].filter(Boolean);
 
@@ -240,7 +239,8 @@ function buildPostHtml(post) {
   return [
     ...head,
     '<body>',
-    '  <p><a href="/blog.html">← Back</a></p>',
+    BLOG_BUTTON,
+    '  <p class="back"><a href="/blog.html">← Back</a></p>',
     `  <h1>${escapeHtml(title)}</h1>`,
     `  <p class="date">${date}</p>`,
     '',
@@ -422,29 +422,6 @@ async function saveImage({ name, base64, dataUrl }) {
 
 // ---------------------------------------------------------------- 索引页
 
-const INDEX_STYLE = `  html { background: black; }
-  body { color: #6C7486; font-family: "Courier New", monospace;
-         max-width: 720px; margin: 0 auto; padding: 60px 24px; line-height: 1.8; }
-  a { color: #99A3BA; text-decoration: none; border-bottom: 1px dotted #6C7486; }
-  a:hover { color: #E4ECFA; border-bottom-color: #99A3BA; }
-  .back { font-size: 14px; }
-  h1 { color: #E4ECFA; font-size: 28px; letter-spacing: 2px; }
-  .search { width: 100%; box-sizing: border-box; background: #0b0b0b; color: #E4ECFA;
-            border: 1px solid #242836; padding: 8px 12px; font-family: inherit;
-            font-size: 14px; margin: 6px 0 10px; outline: none; }
-  .search:focus { border-color: #3F4656; }
-  .count { font-size: 13px; color: #3F4656; margin: 0 0 12px; }
-  .post { border-bottom: 1px solid #242836; padding: 18px 0; }
-  .post h2 { font-size: 18px; margin: 0 0 6px; }
-  .post h2 a { color: #E4ECFA; border: none; }
-  .post h2 a:hover { color: #99A3BA; }
-  .date { font-size: 13px; color: #3F4656; }
-  .summary { margin: 4px 0 0; font-size: 14px; }
-  .tag { font-size: 12px; color: #3F4656; border: 1px solid #242836;
-         padding: 0 6px; margin-left: 8px; }
-  .empty { color: #3F4656; font-style: italic; }
-  ::selection { background: #222; color: #99A3BA; }`;
-
 function buildIndexHtml(posts) {
   const published = posts.filter((p) => !p.draft);
 
@@ -476,11 +453,10 @@ function buildIndexHtml(posts) {
 <title>Blog | ${SITE_NAME}</title>
 <meta name="description" content="${SITE_NAME} 的博客">
 <link rel="icon" type="image/png" href="/favicon.png">
-<style>
-${INDEX_STYLE}
-</style>
+${BLOG_HEAD_ASSETS}
 </head>
 <body>
+${BLOG_BUTTON}
   <p class="back"><a href="/">← Back</a></p>
   <h1>Blog</h1>
   <input id="search" class="search" type="search" placeholder="搜索标题、标签或摘要…" autocomplete="off">

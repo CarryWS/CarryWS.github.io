@@ -1,15 +1,24 @@
+/* 主题变量集中在 theme.css（主页 / 博客共用一套 token） */
+@import url("theme.css");
+
 * {
   margin: 0;
   padding: 0;
 }
 
-html { transition: background-color .3s ease; }
+html {
+  /* 主题切换时整页平滑过渡；只过渡颜色，避免动画期间布局抖动 */
+  transition: background-color .3s ease, color .3s ease;
+}
 
 body {
   font: 16px/1.8 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
   "Microsoft YaHei", Helvetica, Arial, sans-serif,
   "Apple Color Emoji", "Segoe UI Emoji";
   text-align: center;
+  background: var(--bg);
+  color: var(--fg);
+  transition: background-color .3s ease, color .3s ease;
 }
 
 p { margin: 20px 0; }
@@ -99,6 +108,90 @@ ul, ol { list-style: none; }
 }
 
 
+/* Logo screen
+/* ================================================= */
+/* 方案一：不为浅色模式重绘 logo，而是把这块黑升格成一枚"发光屏"——
+   padding 留出屏幕边框，圆角 + 描边 + 光晕交代它是一个亮着的面板，
+   而不是一张没抠干净的图。 */
+.logo-screen {
+  display: inline-block;
+  padding: var(--logo-pad);
+  background: var(--logo-ink);
+  border: 1px solid var(--logo-rim);
+  border-radius: var(--logo-radius);
+  box-shadow:
+    0 10px 30px var(--logo-glow),
+    inset 0 0 0 1px var(--logo-inset),
+    0 0 34px var(--logo-glow);
+  transition: background-color .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+
+.logo-screen img {
+  display: block;
+  width: 300px;
+  max-width: 100%;
+  height: auto;
+  /* 提亮画面：黑底仍是 0，暗帧上抬约 10%（GIF 本身自带明暗抖动，
+     用对比度会压暗暗帧，所以只做轻微增益） */
+  filter: brightness(1.1) contrast(0.98);
+}
+
+/* 素材已裁到只剩内容，移动端不需要再收窄内边距 */
+@media (max-width: 767px) {
+  .logo-screen { padding: 3px 4px; }
+  .logo-screen img { width: min(300px, 68vw); }
+}
+
+/* 小屏上音乐盒会横跨整页并盖住内容，先让它收窄避免遮挡 */
+@media (max-width: 480px) {
+  #music-box { width: calc(100vw - 24px); right: 12px; top: 64px; }
+  #sys-status { font-size: 11px; left: 8px; bottom: 8px; }
+}
+
+
+/* Terminal
+/* ================================================= */
+#terminal {
+  margin: 30px auto 0;
+  max-width: 600px;
+  text-align: left;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--term-border);
+  cursor: text;
+  transition: border-color .3s ease, background-color .3s ease;
+}
+
+#terminal,
+#terminal * {
+  font-family: "Courier New", Courier, monospace !important;
+}
+
+/* 覆盖 jQuery Terminal 默认背景，融入页面；前景色由 JS 读取 --fg 注入 */
+#terminal .terminal,
+#terminal .cmd,
+#terminal .cmd .cursor,
+#terminal .cmd .cursor.blink {
+  background: transparent !important;
+}
+
+#terminal .terminal {
+  color: var(--fg);
+}
+
+/* 浅色主题下终端改成浅面板：反白的 ANSI 色（深青/深黄）只在浅底上才可读 */
+html[data-theme="light"] #terminal,
+html[data-theme="light"] #terminal .terminal,
+html[data-theme="light"] #terminal .terminal-output,
+html[data-theme="light"] #terminal .cmd {
+  background: var(--term-bg) !important;
+}
+
+html[data-theme="light"] #terminal .terminal {
+  color: var(--fg-strong);
+}
+
+
 /* Quote
 /* ================================================= */
 .quote {
@@ -185,35 +278,260 @@ ul, ol { list-style: none; }
 }
 
 
-/* LIGHT MODE
+/* Music box
 /* ================================================= */
-html { background: black; }
-body { color: #6C7486; }
-::selection { background: #222; color: #99A3BA; }
-h1 { color: #E4ECFA; }
-.quote { color: #6C7486; }
-.quote-icon { color: #3F4656; }
-.quote-line { background: #242836; }
-a { color: #99A3BA; }
-.links a { border-bottom-color: #6C7486; }
-.links a:hover { color: #E4ECFA; border-bottom-color: #99A3BA; }
-.location { color: #6C7486; }
-.relocating { color: #ccc; }
+#music-box {
+  position: fixed;
+  right: 24px;
+  top: 90px;
+  z-index: 9999;
+  width: 330px;
+  background: var(--panel-solid);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background-color .3s ease, border-color .3s ease;
+}
+
+#music-box .music-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--panel-inner);
+  border-bottom: 1px solid var(--panel-border);
+  cursor: move;
+  color: var(--accent-alt);
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+#music-box .music-title::before {
+  content: '\266A ';
+  color: var(--accent);
+}
+
+#music-box .music-close {
+  cursor: pointer;
+  color: var(--dim);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+#music-box .music-close:hover {
+  color: var(--accent);
+}
+
+#music-box.collapsed #music-player {
+  display: none;
+}
+
+#music-box.collapsed {
+  width: auto;
+  min-width: 150px;
+}
+
+#music-box #music-player {
+  display: block;
+  width: 100%;
+  background: var(--panel);
+}
+
+/* ---- APlayer 深色化，融入页面风格 ---- */
+#music-box .aplayer {
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--bright);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+#music-box .aplayer .aplayer-info {
+  border-bottom: 1px solid var(--panel-border);
+}
+
+#music-box .aplayer .aplayer-info .aplayer-music .aplayer-title {
+  color: var(--bright);
+  font-size: 13px;
+}
+
+#music-box .aplayer .aplayer-info .aplayer-music .aplayer-author {
+  color: var(--accent-alt);
+  font-size: 11px;
+}
+
+#music-box .aplayer .aplayer-info .aplayer-controller .aplayer-time {
+  color: var(--dim);
+}
+
+#music-box .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap {
+  background: var(--stroke);
+}
+
+#music-box .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar {
+  background: var(--track);
+}
+
+#music-box .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar .aplayer-loaded {
+  background: var(--track-loaded);
+}
+
+#music-box .aplayer .aplayer-info .aplayer-controller .aplayer-volume-wrap .aplayer-volume-bar-wrap .aplayer-volume-bar {
+  background: var(--track);
+}
+
+#music-box .aplayer .aplayer-list {
+  background: var(--panel-deep);
+  border-top: 1px solid var(--panel-border);
+}
+
+#music-box .aplayer .aplayer-list ol {
+  border-top: 0;
+}
+
+#music-box .aplayer .aplayer-list ol li {
+  border-top: 1px solid var(--stroke);
+  color: var(--muted);
+  font-size: 12px;
+  height: 32px;
+  line-height: 32px;
+}
+
+#music-box .aplayer .aplayer-list ol li:hover {
+  background: var(--panel-hover);
+}
+
+#music-box .aplayer .aplayer-list ol li.aplayer-list-light {
+  background: var(--panel-hover);
+}
+
+#music-box .aplayer .aplayer-list ol li.aplayer-list-light .aplayer-list-title {
+  color: var(--accent);
+}
+
+#music-box .aplayer .aplayer-list ol li .aplayer-list-index,
+#music-box .aplayer .aplayer-list ol li .aplayer-list-author {
+  color: var(--dim);
+}
+
+#music-box .aplayer .aplayer-lrc:before,
+#music-box .aplayer .aplayer-lrc:after {
+  display: none;
+}
+
+#music-box .aplayer .aplayer-lrc p {
+  color: var(--accent-alt);
+  font-size: 12px;
+}
+
+#music-box #music-player .music-error {
+  padding: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+  word-break: break-all;
+}
+
+#music-box #music-player .music-error a {
+  color: var(--accent);
+}
+
+#music-box #music-player .music-error a:hover {
+  color: var(--bright);
+}
 
 
-/* DARK MODE
+/* System status
 /* ================================================= */
-@media (prefers-color-scheme: dark) {
-  html { background: black; }
-  body { color: #6C7486; }
-  ::selection { background: #222; color: #99A3BA; }
-  h1 { color: #E4ECFA; }
-  .quote { color: #6C7486; }
-  .quote-icon { color: #3F4656; }
-  .quote-line { background: #242836; }
-  a { color: #99A3BA; }
-  .links a { border-bottom-color: #6C7486; }
-  .links a:hover { color: #E4ECFA; border-bottom-color: #99A3BA; }
-  .location { color: #6C7486; }
-  .relocating { color: #ccc; }
+#sys-status {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  padding: 8px 12px;
+  background: var(--panel-solid);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--muted);
+  letter-spacing: 1px;
+  user-select: none;
+  -webkit-user-select: none;
+  text-align: left;
+  transition: background-color .3s ease, border-color .3s ease;
+}
+
+#sys-status .ss-line {
+  white-space: nowrap;
+  text-align: left;
+}
+
+#sys-status .ss-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: var(--dim);
+  vertical-align: 1px;
+}
+
+#sys-status .ss-val {
+  color: var(--accent-alt);
+}
+
+#sys-status .ss-addr {
+  color: var(--accent);
+  cursor: pointer;
+  border-bottom: 1px dotted var(--accent);
+}
+
+
+/* Theme overrides
+/* ================================================= */
+/* 深色仍是默认值；这里只列出真正需要按主题换值的属性。
+   颜色值全部来自 theme.css 的 token。 */
+a { color: var(--link); }
+a:hover { color: var(--link-hover); }
+::selection { background: var(--sel-bg); color: var(--sel-fg); }
+h1 { color: var(--fg-strong); }
+.quote { color: var(--fg); }
+.quote-icon { color: var(--fg-dim); }
+.quote-line { background: var(--line); }
+.links a { border-bottom-color: var(--fg); }
+.links a:hover { color: var(--link-hover); border-bottom-color: var(--link); }
+.location { color: var(--fg); }
+.relocating { color: var(--fg); }
+
+html[data-theme="light"] .relocating { color: var(--fg-dim); }
+
+/* 浅色下正文灰蓝偏淡，加一层极轻的暗色描边提升小字号可读性（深色主题不需要） */
+html[data-theme="light"] body {
+  text-shadow: 0 0 1px rgba(23, 28, 38, .18);
+}
+
+/* 无 JS 兜底时同样压暗 relocating 与加描边（token 覆盖在 theme.css 里） */
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) .relocating { color: var(--fg-dim); }
+  html:not([data-theme]) body {
+    text-shadow: 0 0 1px rgba(23, 28, 38, .18);
+  }
+}
+
+
+/* Reduced motion
+/* ================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html, body, .logo-screen, #terminal, #music-box, #sys-status,
+  .theme-toggle, .links a, .quote-line, .relocating {
+    transition: none !important;
+  }
 }

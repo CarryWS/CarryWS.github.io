@@ -6,214 +6,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title> </title>
   <meta name="Description" content="CarryWS 的个人主页">
-  <meta name="color-scheme" content="dark light">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#000000" id="meta-theme-color">
   <script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script>
+  <script>
+    /* 主题必须在首屏绘制前落定，否则浅色模式会先闪一下深色 */
+    (function (H, M) {
+      var saved = null;
+      try { saved = localStorage.getItem('theme'); } catch (e) {}
+      // 支持 ?theme=light|dark 强制指定（方便分享某个主题的链接，也便于回归截图）
+      var forced = null;
+      var m0 = /[?&]theme=(light|dark)\b/.exec(location.search);
+      if (m0) forced = m0[1];
+      var theme = forced || ((saved === 'light' || saved === 'dark')
+        ? saved
+        : (M && M.matches ? 'light' : 'dark'));
+      if (forced) { try { localStorage.setItem('theme', forced); } catch (e) {} }
+      H.setAttribute('data-theme', theme);
+      var m = document.querySelector('meta[name="color-scheme"]');
+      if (m) m.setAttribute('content', theme);
+    })(document.documentElement, window.matchMedia && window.matchMedia('(prefers-color-scheme: light)'));
+  </script>
   <link rel="stylesheet" type="text/css" href="assets/css/main.css"/>
   <link rel="stylesheet" type="text/css" href="assets/css/jquery.terminal.min.css"/>
   <link rel="stylesheet" type="text/css" href="assets/vendors/aplayer/APlayer.min.css"/>
   <link rel="icon" type="image/png" href="favicon.png">
-  <style>
-    /* 终端容器 */
-    #terminal {
-      margin: 30px auto 0;
-      max-width: 600px;
-      text-align: left;
-      border-radius: 6px;
-      overflow: hidden;
-      border: 1px solid #242836;
-    }
-    #terminal,
-    #terminal * {
-      font-family: "Courier New", Courier, monospace !important;  
-    }
-    /* 覆盖 jQuery Terminal 默认背景，融入页面 */
-    #terminal .terminal,
-    #terminal .cmd,
-    #terminal .cmd .cursor,
-    #terminal .cmd .cursor.blink {
-      background: transparent !important;
-    }
-    /* 网易云歌单悬浮方块 */
-    #music-box {
-      position: fixed;
-      right: 24px;
-      top: 90px;
-      z-index: 9999;
-      width: 330px;
-      background: rgba(10, 12, 18, 0.94);
-      border: 1px solid #2a2f3a;
-      border-radius: 6px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      overflow: hidden;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    #music-box .music-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: #13161d;
-      border-bottom: 1px solid #2a2f3a;
-      cursor: move;
-      color: #7ee787;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      letter-spacing: 2px;
-    }
-    #music-box .music-title::before {
-      content: '♪ ';
-      color: #58a6ff;
-    }
-    #music-box .music-close {
-      cursor: pointer;
-      color: #565d6e;
-      font-size: 16px;
-      line-height: 1;
-      padding: 0 4px;
-    }
-    #music-box .music-close:hover {
-      color: #58a6ff;
-    }
-    #music-box.collapsed #music-player {
-      display: none;
-    }
-    #music-box.collapsed {
-      width: auto;
-      min-width: 150px;
-    }
-    #music-box #music-player {
-      display: block;
-      width: 100%;
-      background: #0a0c12;
-    }
-    /* ---- APlayer 深色化，融入页面风格 ---- */
-    #music-box .aplayer {
-      margin: 0;
-      background: transparent;
-      border-radius: 0;
-      box-shadow: none;
-      color: #c9d1d9;
-      font-family: 'Courier New', Courier, monospace;
-    }
-    #music-box .aplayer .aplayer-info {
-      border-bottom: 1px solid #2a2f3a;
-    }
-    #music-box .aplayer .aplayer-info .aplayer-music .aplayer-title {
-      color: #c9d1d9;
-      font-size: 13px;
-    }
-    #music-box .aplayer .aplayer-info .aplayer-music .aplayer-author {
-      color: #7ee787;
-      font-size: 11px;
-    }
-    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-time {
-      color: #565d6e;
-    }
-    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap {
-      background: #1b1f27;
-    }
-    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar {
-      background: #2a2f3a;
-    }
-    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar .aplayer-loaded {
-      background: #3b4250;
-    }
-    #music-box .aplayer .aplayer-info .aplayer-controller .aplayer-volume-wrap .aplayer-volume-bar-wrap .aplayer-volume-bar {
-      background: #2a2f3a;
-    }
-    #music-box .aplayer .aplayer-list {
-      background: #0d1017;
-      border-top: 1px solid #2a2f3a;
-    }
-    #music-box .aplayer .aplayer-list ol {
-      border-top: 0;
-    }
-    #music-box .aplayer .aplayer-list ol li {
-      border-top: 1px solid #1b1f27;
-      color: #8b949e;
-      font-size: 12px;
-      height: 32px;
-      line-height: 32px;
-    }
-    #music-box .aplayer .aplayer-list ol li:hover {
-      background: #161b22;
-    }
-    #music-box .aplayer .aplayer-list ol li.aplayer-list-light {
-      background: #161b22;
-    }
-    #music-box .aplayer .aplayer-list ol li.aplayer-list-light .aplayer-list-title {
-      color: #58a6ff;
-    }
-    #music-box .aplayer .aplayer-list ol li .aplayer-list-index,
-    #music-box .aplayer .aplayer-list ol li .aplayer-list-author {
-      color: #565d6e;
-    }
-    #music-box .aplayer .aplayer-lrc:before,
-    #music-box .aplayer .aplayer-lrc:after {
-      display: none;
-    }
-    #music-box .aplayer .aplayer-lrc p {
-      color: #7ee787;
-      font-size: 12px;
-    }
-    #music-box #music-player .music-error {
-      padding: 14px;
-      color: #8b949e;
-      font-size: 12px;
-      line-height: 1.9;
-      word-break: break-all;
-    }
-    #music-box #music-player .music-error a {
-      color: #58a6ff;
-    }
-    /* M720Q 系统状态（左下角） */
-    #sys-status {
-      position: fixed;
-      left: 16px;
-      bottom: 16px;
-      z-index: 9999;
-      padding: 8px 12px;
-      background: rgba(10, 12, 18, 0.9);
-      border: 1px solid #2a2f3a;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      line-height: 1.9;
-      color: #8b949e;
-      letter-spacing: 1px;
-      user-select: none;
-      -webkit-user-select: none;
-      text-align: left;
-    }
-    #sys-status .ss-line {
-      white-space: nowrap;
-      text-align: left;
-    }
-    #sys-status .ss-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      margin-right: 6px;
-      background: #565d6e;
-      vertical-align: 1px;
-    }
-    #sys-status .ss-val {
-      color: #7ee787;
-    }
-    #sys-status .ss-addr {
-      color: #58a6ff;
-      cursor: pointer;
-      border-bottom: 1px dotted #58a6ff;
-    }
-  </style>
+  <script src="assets/js/theme.js"></script>
+  <!-- 原本的 200 行内联样式（终端 / 音乐盒 / 系统状态 / logo）已迁入 assets/css/main.css 并改用主题变量 -->
 </head>
 
 <body>
+  <button type="button" class="theme-toggle" id="theme-toggle" aria-label="切换深浅色主题" title="切换深色 / 浅色"><i class="icon icon-sun" id="theme-icon"></i></button>
   <div class="vi">
     <!-- <h1 class="animate-slide-in-down">CarryWS</h1> -->
-    <img src="logo_glitched.gif" alt="logo" width="300">
+    <!-- 方案一：logo 不重绘，黑底升格为"发光屏"（圆角 + 描边 + 光晕）
+         优先用 WebP：GIF 是 13.3MB（1920x540 / 68 帧），同等画质下 WebP 小一个数量级；
+         显示宽度只有 300px，所以按 2x/3x 提供 srcset，别让高分辨率冗余拖垮首屏。 -->
+    <div class="logo-screen">
+      <picture>
+        <source type="image/webp"
+                srcset="assets/img/logo_720.webp 720w, assets/img/logo_1080.webp 1080w"
+                sizes="300px">
+        <img src="logo_glitched.gif" alt="CRWS" width="300" height="78" decoding="async">
+      </picture>
+    </div>
     <div id="terminal"></div>
     <div class="quote">
       <span class="quote-line quote-line-start animate-slide-in-left"></span>
@@ -260,8 +96,25 @@
   </div>
 
 
-  <script src="assets/vendors/jquery-3.3.1.min.js"></script>
-  <script src="assets/vendors/jquery.terminal.min.js"></script>
+  <script>
+    // ---- 主题切换（浅色 / 深色）----
+    // 首屏的 data-theme 由 <head> 内联脚本落定；切换逻辑在共享的 assets/js/theme.js。
+    // 这里只负责按钮图标：切换后显示"将要切换过去"的那个图标。
+    (function () {
+      var icon = document.getElementById('theme-icon');
+      if (!icon) return;
+
+      function sync() {
+        var light = document.documentElement.getAttribute('data-theme') === 'light';
+        icon.className = 'icon ' + (light ? 'icon-moon' : 'icon-sun');
+      }
+
+      sync();
+      window.addEventListener('themechange', sync);
+    })();
+  </script>
+
+  <script src="assets/vendors/jquery-3.3.1.min.js"></script>  <script src="assets/vendors/jquery.terminal.min.js"></script>
   <script src="assets/vendors/aplayer/APlayer.min.js"></script>
   <script>
     $(function () {
@@ -398,21 +251,43 @@
       }
 
       // ---- Terminal ----
+      // 终端配色跟随主题：从 main.css 的 token 里取，浅色模式自动换成更深的 ANSI 色
+      function token(name, fallback) {
+        var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+        v = (v || '').trim();
+        return v || fallback;
+      }
+
+      function terminalColors() {
+        return {
+          cyan: token('--term-cyan', 'cyan'),
+          yellow: token('--term-yellow', 'yellow'),
+          green: token('--term-green', 'green'),
+          red: token('--term-red', 'red')
+        };
+      }
+
+      function ansi(name, text) {
+        return '[[;' + terminalColors()[name] + ';]' + text + ']';
+      }
+
       initTerminal();
 
       function initTerminal() {
-        $('#terminal').terminal({
+        var C = terminalColors();
+
+        var term = $('#terminal').terminal({
 
           help: function() {
             this.echo('');
-            this.echo('  [[b;cyan;]Available commands:]');
-            this.echo('  [[b;yellow;]help]       Show this message');
-            this.echo('  [[b;yellow;]ls]         List directory')
-            this.echo('  [[b;yellow;]whoami]     Who am I');
-            this.echo('  [[b;yellow;]bilibili]   Open bilibili');
-            this.echo('  [[b;yellow;]cat]        Get file context')
-            this.echo('  [[b;yellow;]clear]      Clear screen');
-            this.echo('  [[b;yellow;]echo ...]   Echo text back');
+            this.echo('  [[b;' + C.cyan + ';]Available commands:]');
+            this.echo('  [[b;' + C.yellow + ';]help]       Show this message');
+            this.echo('  [[b;' + C.yellow + ';]ls]         List directory')
+            this.echo('  [[b;' + C.yellow + ';]whoami]     Who am I');
+            this.echo('  [[b;' + C.yellow + ';]bilibili]   Open bilibili');
+            this.echo('  [[b;' + C.yellow + ';]cat]        Get file context')
+            this.echo('  [[b;' + C.yellow + ';]clear]      Clear screen');
+            this.echo('  [[b;' + C.yellow + ';]echo ...]   Echo text back');
             this.echo('');
           },
 
@@ -434,7 +309,7 @@
           },
 
           ls: function(){
-            this.echo('index.html\nreadme.md\nfavicon.png\n404.html\n[[b;red;]Secret.txt]');
+            this.echo('index.html\nreadme.md\nfavicon.png\n404.html\n' + ansi('red', 'Secret.txt'));
           },
 
           cat: function(file){
@@ -450,8 +325,8 @@
 
 
          {
-          greetings: 'Cyberia Linux Ver:1.0\nWelcome to the realm of this euphoria.\nType [[b;yellow;]help] to see available commands.',
-          prompt: '[[b;green;]visitor@carryws]:~$ ',
+          greetings: 'Cyberia Linux Ver:1.0\nWelcome to the realm of this euphoria.\nType [[b;' + C.yellow + ';]help] to see available commands.',
+          prompt: '[[b;' + C.green + ';]visitor@carryws]:~$ ',
           height: 200,
           checkArity: false,
           history: true,
@@ -461,6 +336,42 @@
             // 阻止页面快捷键冲突
           }
         });
+
+        // 主题切换后重绘终端里已输出的 ANSI 颜色（不重建实例，保留历史）
+        window.addEventListener('themechange', function () {
+          var after = terminalColors();
+          var before = C;
+          var keys = ['cyan', 'yellow', 'green', 'red'];
+
+          Array.prototype.forEach.call(
+            document.querySelectorAll('#terminal .terminal-output span'),
+            function (el) {
+              var computed = el.style.color || getComputedStyle(el).color;
+              keys.forEach(function (name) {
+                if (normalize(computed) === normalize(before[name])) {
+                  el.style.color = after[name];
+                }
+              });
+            }
+          );
+
+          C = after;
+          if (term && term.css) {
+            term.css({ color: token('--fg', '#6C7486') });
+          }
+        });
+
+        // 把 CSS 颜色统一成 rgb() 形式，便于比较（'cyan' 与 'rgb(0,255,255)' 视为相同）
+        function normalize(color) {
+          if (!color) return '';
+          var probe = document.createElement('span');
+          probe.style.color = color;
+          if (!probe.style.color) return String(color).toLowerCase();
+          document.body.appendChild(probe);
+          var out = getComputedStyle(probe).color;
+          document.body.removeChild(probe);
+          return out;
+        }
       }
     });
 
@@ -518,7 +429,10 @@
             new APlayer({
               container: host,
               audio: tracks,
-              theme: '#58a6ff',
+              theme: (function () {
+                var v = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+                return (v || '').trim() || '#58a6ff';
+              })(),
               lrcType: 3,
               preload: 'none',
               mutex: true,

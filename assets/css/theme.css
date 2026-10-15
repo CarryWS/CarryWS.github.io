@@ -1,0 +1,238 @@
+/*
+ * 主题变量（主页 / 博客 / 所有文章页共用）
+ *
+ * 深色是默认值；浅色由 html[data-theme="light"] 覆盖。
+ * 没有 JS 时（.no-js，属性写不上去）走 prefers-color-scheme 兜底。
+ *
+ * 只需改这一个文件，全站配色同时生效。
+ */
+
+:root {
+  color-scheme: dark;
+
+  --bg: #000;
+  --fg: #6C7486;
+  --fg-strong: #E4ECFA;
+  --fg-dim: #3F4656;
+  --line: #242836;
+
+  --link: #99A3BA;
+  --link-hover: #E4ECFA;
+  --sel-bg: #222;
+  --sel-fg: #99A3BA;
+
+  /* 面板（音乐盒 / 系统状态 / 博客搜索框 / 标签） */
+  --panel: #0a0c12;
+  --panel-solid: rgba(10, 12, 18, .94);
+  --panel-inner: #13161d;
+  --panel-deep: #0d1017;
+  --panel-hover: #161b22;
+  --panel-border: #2a2f3a;
+  --stroke: #1b1f27;
+
+  --accent: #58a6ff;
+  --accent-alt: #7ee787;
+  --accent-red: #f85149;
+  --ok: #3fb950;
+  --dim: #565d6e;
+  --muted: #8b949e;
+  --bright: #c9d1d9;
+  --track: #2a2f3a;
+  --track-loaded: #3b4250;
+
+  /* logo 发光屏 */
+  --logo-ink: #000;                 /* 与 GIF 自带黑底严格同色，接缝不可见 */
+  --logo-pad: 4px 6px;              /* 素材内部黑带已裁掉，只留屏幕边框这一圈 */
+  --logo-radius: 10px;
+  --logo-glow: rgba(88, 166, 255, .18);
+  --logo-rim: rgba(88, 166, 255, .22);
+  --logo-inset: rgba(255, 255, 255, .07);
+
+  /* 终端：深色主题用纯黑，浅色主题改用浅面板（见下方覆盖） */
+  --term-bg: #000;
+  --term-border: #242836;
+
+  /* 终端 ANSI（供 JS 读取后传给 jQuery Terminal） */
+  --term-cyan: cyan;
+  --term-yellow: yellow;
+  --term-green: green;
+  --term-red: red;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #F4F5F7;
+  --fg: #525A6B;
+  --fg-strong: #171C26;
+  --fg-dim: #9098A6;
+  --line: #D8DCE3;
+
+  --link: #4A5568;
+  --link-hover: #12161F;
+  --sel-bg: #DDE2EA;
+  --sel-fg: #12161F;
+
+  /* 面板：浅色下不跟着 logo 一起变深。
+     logo 是加法混合的发光素材，必须有深底；其余面板没有这个约束，
+     跟着白底走，页面上就只剩 logo 一处深色。 */
+  --panel: #FFFFFF;
+  --panel-solid: rgba(255, 255, 255, .94);
+  --panel-inner: #F1F3F6;
+  --panel-deep: #FFFFFF;
+  --panel-hover: #EDF0F4;
+  --panel-border: #DCE0E6;
+  --stroke: #E7EAEF;
+
+  --accent: #2F6FEB;
+  --accent-alt: #1F7A44;
+  --accent-red: #B3261E;
+  --ok: #1F7A44;
+  --dim: #8A92A0;
+  --muted: #6E7684;
+  --bright: #1B2230;
+  --track: #D5DAE1;
+  --track-loaded: #BAC0C9;
+
+  /* 浅色下 logo 必须有自己的底：白字芯落在白底上会直接消失。
+     光晕不能取亮色，否则在白底上变成一圈白雾；改用极淡的中性暗晕 + 投影。 */
+  --logo-ink: #000;
+  --logo-glow: rgba(23, 28, 38, .06);
+  --logo-rim: rgba(255, 255, 255, .10);
+  --logo-inset: rgba(255, 255, 255, .08);
+
+  /* 浅色主题的终端改成浅面板，否则页面正中是一块纯黑硬块，抢走 logo 的视觉焦点 */
+  --term-bg: #E7EAF0;
+  --term-border: #D2D8E0;
+
+  /* 浅色页面不能用亮青/亮黄，换成深色系保证可读 */
+  --term-cyan: #0B5FA5;
+  --term-yellow: #8A6100;
+  --term-green: #1F7A44;
+  --term-red: #B3261E;
+}
+
+/* 没有 JS 时 data-theme 写不上去，此时跟随系统偏好 */
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) {
+    color-scheme: light;
+
+    --bg: #F4F5F7;
+    --fg: #525A6B;
+    --fg-strong: #171C26;
+    --fg-dim: #9098A6;
+    --line: #D8DCE3;
+
+    --link: #4A5568;
+    --link-hover: #12161F;
+    --sel-bg: #DDE2EA;
+    --sel-fg: #12161F;
+
+    --panel: #FFFFFF;
+    --panel-solid: rgba(255, 255, 255, .94);
+    --panel-inner: #F1F3F6;
+    --panel-deep: #FFFFFF;
+    --panel-hover: #EDF0F4;
+    --panel-border: #DCE0E6;
+    --stroke: #E7EAEF;
+
+    --accent: #2F6FEB;
+    --accent-alt: #1F7A44;
+    --accent-red: #B3261E;
+    --ok: #1F7A44;
+    --dim: #8A92A0;
+    --muted: #6E7684;
+    --bright: #1B2230;
+    --track: #D5DAE1;
+    --track-loaded: #BAC0C9;
+
+    --logo-glow: rgba(23, 28, 38, .06);
+    --logo-rim: rgba(255, 255, 255, .10);
+    --logo-inset: rgba(255, 255, 255, .08);
+
+    --term-bg: #E7EAF0;
+    --term-border: #D2D8E0;
+
+    --term-cyan: #0B5FA5;
+    --term-yellow: #8A6100;
+    --term-green: #1F7A44;
+    --term-red: #B3261E;
+  }
+}
+
+/* ---------------------------------------------------------------- 基础 */
+html {
+  /* 主题切换时平滑过渡；只过渡颜色，避免动画期间布局抖动 */
+  transition: background-color .3s ease, color .3s ease;
+  background: var(--bg);
+}
+
+body {
+  color: var(--fg);
+  background: var(--bg);
+  transition: background-color .3s ease, color .3s ease;
+}
+
+a { color: var(--link); }
+a:hover { color: var(--link-hover); }
+::selection { background: var(--sel-bg); color: var(--sel-fg); }
+
+/* ---------------------------------------------------------------- 主题切换按钮 */
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color .3s ease, border-color .3s ease, background-color .3s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* 图标字体（主页）与内联 SVG（博客）两种用法都支持 */
+.theme-toggle i { font-size: 16px; }
+
+/* 博客的按钮把两个 SVG 都写进标记，靠 [data-theme] 决定显隐，免去图标互换脚本。
+   约定：太阳 = 当前是深色（点它去浅色）；月亮 = 当前是浅色。 */
+.theme-toggle .icon-moon { display: none; }
+
+html[data-theme="light"] .theme-toggle .icon-sun { display: none; }
+html[data-theme="light"] .theme-toggle .icon-moon { display: block; }
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) .theme-toggle .icon-sun { display: none; }
+  html:not([data-theme]) .theme-toggle .icon-moon { display: block; }
+}
+
+/* ---------------------------------------------------------------- 降低动效 */
+@media (prefers-reduced-motion: reduce) {
+  html, body, .theme-toggle {
+    transition: none !important;
+  }
+}
