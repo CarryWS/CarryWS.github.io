@@ -281,13 +281,19 @@
           help: function() {
             this.echo('');
             this.echo('  [[b;' + C.cyan + ';]Available commands:]');
-            this.echo('  [[b;' + C.yellow + ';]help]       Show this message');
-            this.echo('  [[b;' + C.yellow + ';]ls]         List directory')
-            this.echo('  [[b;' + C.yellow + ';]whoami]     Who am I');
-            this.echo('  [[b;' + C.yellow + ';]bilibili]   Open bilibili');
-            this.echo('  [[b;' + C.yellow + ';]cat]        Get file context')
-            this.echo('  [[b;' + C.yellow + ';]clear]      Clear screen');
-            this.echo('  [[b;' + C.yellow + ';]echo ...]   Echo text back');
+            this.echo('  [[b;' + C.yellow + ';]help]         Show this message');
+            this.echo('  [[b;' + C.yellow + ';]ls]           List directory')
+            this.echo('  [[b;' + C.yellow + ';]whoami]       Who am I');
+            this.echo('  [[b;' + C.yellow + ';]bilibili]     Open bilibili');
+            this.echo('  [[b;' + C.yellow + ';]cloudmusic]   Open CloudMusic');
+            this.echo('  [[b;' + C.yellow + ';]youtube]      Open YouTube');
+            this.echo('  [[b;' + C.yellow + ';]x]            Open X');
+            this.echo('  [[b;' + C.yellow + ';]github]       Open GitHub');
+            this.echo('  [[b;' + C.yellow + ';]steam]        Open Steam');
+            this.echo('  [[b;' + C.yellow + ';]blog]         Open blog');
+            this.echo('  [[b;' + C.yellow + ';]cat]          Get file context')
+            this.echo('  [[b;' + C.yellow + ';]clear]        Clear screen');
+            this.echo('  [[b;' + C.yellow + ';]echo ...]     Echo text back');
             this.echo('');
           },
 
@@ -298,6 +304,36 @@
           bilibili: function() {
             this.echo('Opening bilibili...');
             window.open('https://space.bilibili.com/1100762947', '_blank');
+          },
+
+          cloudmusic: function() {
+            this.echo('Opening CloudMusic...');
+            window.open('https://music.163.com/#/artist?id=54683478', '_blank');
+          },
+
+          youtube: function() {
+            this.echo('Opening YouTube...');
+            window.open('https://www.youtube.com/@CarryWS', '_blank');
+          },
+
+          x: function() {
+            this.echo('Opening X...');
+            window.open('https://x.com/carry_ws', '_blank');
+          },
+
+          github: function() {
+            this.echo('Opening GitHub...');
+            window.open('https://github.com/CarryWS', '_blank');
+          },
+
+          steam: function() {
+            this.echo('Opening Steam...');
+            window.open('https://steamcommunity.com/id/CarryWS/', '_blank');
+          },
+
+          blog: function() {
+            this.echo('Opening blog...');
+            window.open('blog.html', '_blank');
           },
 
           clear: function() {
