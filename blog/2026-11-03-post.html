@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>在给 AI 养鱼之前，我先送走了一块二手 SSD | CarryWS</title>
+<meta name="description" content="想把「养鱼」的 AI agent 装到家里那台小主机上，结果第一步就撞上了 Input/output error。这篇是那次故障的完整复盘：怎么靠零字节 banner、冻住的状态挂件和一串 sqlite 报错定位到一块二手 SSD，以及我为什么决定不修它。">
+<meta name="keywords" content="服务器, 运维, SSD, AI, 折腾">
+<meta name="post-date" content="2026-11-03">
+<meta name="post-time" content="23:33:41">
+<meta name="author" content="CarryWS">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="stylesheet" type="text/css" href="/assets/css/theme.css">
+<link rel="stylesheet" type="text/css" href="/assets/css/blog.css">
+<script>(function(H){var s=null;try{s=localStorage.getItem('theme')}catch(e){}var m=/[?&]theme=(light|dark)\b/.exec(location.search);H.setAttribute('data-theme',m?m[1]:(s==='light'||s==='dark')?s:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));})(document.documentElement)</script>
+<script src="/assets/js/theme.js"></script>
+</head>
+<body>
+<button type="button" class="theme-toggle" aria-label="切换深浅色主题" title="切换深色 / 浅色">
+  <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-13.5a1.25 1.25 0 0 1 1.25 1.25v1.5a1.25 1.25 0 0 1-2.5 0v-1.5A1.25 1.25 0 0 1 12 3.5zm0 13.5a1.25 1.25 0 0 1 1.25 1.25v1.5a1.25 1.25 0 0 1-2.5 0v-1.5A1.25 1.25 0 0 1 12 17zm8.5-6.25a1.25 1.25 0 0 1-1.25 1.25h-1.5a1.25 1.25 0 0 1 0-2.5h1.5A1.25 1.25 0 0 1 20.5 10.75zm-13.5 0a1.25 1.25 0 0 1-1.25 1.25h-1.5a1.25 1.25 0 0 1 0-2.5h1.5A1.25 1.25 0 0 1 7 10.75zm10.6-5.1a1.25 1.25 0 0 1 0 1.77l-1.06 1.06a1.25 1.25 0 0 1-1.77-1.77l1.06-1.06a1.25 1.25 0 0 1 1.77 0zM9.23 15.29a1.25 1.25 0 0 1 0 1.77l-1.06 1.06a1.25 1.25 0 0 1-1.77-1.77l1.06-1.06a1.25 1.25 0 0 1 1.77 0zm9.54 2.83a1.25 1.25 0 0 1-1.77 0l-1.06-1.06a1.25 1.25 0 0 1 1.77-1.77l1.06 1.06a1.25 1.25 0 0 1 0 1.77zM9.23 6.23a1.25 1.25 0 0 1-1.77 0L6.4 5.17a1.25 1.25 0 0 1 1.77-1.77l1.06 1.06a1.25 1.25 0 0 1 0 1.77z"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.7 14.6A9 9 0 0 1 9.4 3.3a9 9 0 1 0 11.3 11.3z"/></svg>
+</button>
+  <p class="back"><a href="/blog.html">← Back</a></p>
+  <h1>在给 AI 养鱼之前，我先送走了一块二手 SSD</h1>
+  <p class="date">2026-11-03</p>
+
+<p>这周本来想干一件很没技术含量的事：把「养鱼」那套东西装到家里那台小主机上。</p>
+<p>所谓养鱼，就是给 AI 单独一个 B 站小号、一个 QQ 小号，让它有自己的作息——到点自己醒、刷视频、写日记，看到值得的才 @ 你。不是定时任务那种假活，是「它今天想不想看」都能自己决定的那种。项目叫 dsh-fishmate，跑在 DeepSeek Harness 上，我甚至在本地把它的面板、人设、依赖都准备好了。</p>
+<p>然后这台机器用一块二手 SSD 告诉我：想得美。</p>
+<h2>一、出事那天</h2>
+<p>流程走到第二步就卡住了。仓库 clone 完了，正要装 Node，脚本里往 <code>/tmp</code> 写一行日志：</p>
+<pre><code>/tmp/step1.sh: line 10: /tmp/ns.log: Input/output error</code></pre>
+<p><code>Input/output error</code>。不是「没有权限」，不是「磁盘满了」，是 EIO——块设备层直接告诉你「这个扇区我读不出来」。紧接着更离谱的事发生了：连脚本自己都跑不动，<code>/tmp/step1.sh: error reading input file</code>。也就是说，不是我写坏了某个文件，是<strong>整个文件系统读不出来了</strong>。</p>
+<p>那一瞬间我还以为是网络问题，因为紧接着 SSH 就断了。重新连，现象很诡异：<strong>TCP 能连上，但服务端一个字节都不发，直接断开</strong>。</p>
+<h2>二、排除法，一条一条排</h2>
+<p>排查这东西最有意思的地方是：所有「凭直觉」的解释都是错的。</p>
+<p><strong>不是我的网络。</strong> 我换了 WiFi，一样。更关键的是我从杭州那台云服务器上连（走完全独立的 WireGuard 隧道），一模一样：能建连，零字节，断开。</p>
+<p><strong>不是登录问题。</strong> 连不上是在交换版本号之前就死了，跟密钥、跟密码、跟 fail2ban 都没关系——那种问题会给你一个 banner 再拒绝你。</p>
+<p><strong>不是过热。</strong> 状态挂件上温度 27.8°C，CPU 0.5%，内存 29%。这数字看着比我还健康。</p>
+<p><strong>不是掉电重启。</strong> <code>uptime</code> 显示 1669287 秒，19.3 天，一秒都没少。机器没重启过。</p>
+<p><strong>不是内存。</strong> 这条我认真想过，因为之前买过一条二手内存是坏的。但坏内存的典型表现是随机 segfault、MCE、静默数据损坏，它造不出 EIO——EIO 是块设备在报错，是「盘」在说话。</p>
+<h2>三、那个挂件骗了我</h2>
+<p>那天最讽刺的一幕：我盯着网站上的性能挂件看，CPU 0.5%、内存 29%、温度 27.8°C，心想「这不是挺正常的吗」。</p>
+<p>后来我才反应过来去看它的时间戳：<code>ts: 1793716959</code>，也就是 <strong>14:42:39</strong>。而我看它的时间是 15:20。那个挂件是<strong>二十多分钟前的快照</strong>，负责推送数据的定时任务早就死了——它死的原因跟 sshd 一样：systemd 要 exec 脚本，而 exec 要读盘。</p>
+<p>所以「CPU 和内存都很正常」这个结论，本身就是故障的一部分。这个教训值钱：<strong>监控数据不带新鲜度就是谎言。</strong></p>
+<h2>四、拼图拼上的那一刻</h2>
+<p>真正的铁证来自 QQ 机器人。它居然还能回我话：</p>
+<pre><code>刚刚在修服务器</code></pre>
+<p>然后下一句：</p>
+<pre><code>Error occurred while processing agent request: [Errno 5] Input/output error
+Error occurred while processing agent request: (sqlite3.DatabaseError) database disk image is malformed</code></pre>
+<p><code>database disk image is malformed</code>。</p>
+<p>到这里整个图就清楚了：<strong>已经在内存里的进程还活着</strong>（AstrBot 在内存里，所以还能回我一句「刚刚在修服务器」），<strong>但任何需要新读盘的操作全部失败</strong>——sshd 每次连接都要现读 host key，读到坏块就立刻退出，所以你看到的是「连上、零字节、断开」；定时推送要 exec 脚本，起不来，所以挂件数字冻在 14:42；sqlite 读到坏页，于是报 malformed。</p>
+<p>同一个盘，不同进程踩到不同的坏块。一个还能说话，一个已经说不出话。</p>
+<h2>五、为什么是它</h2>
+<p>那台机器是台二手 NEC 的 1L 迷你主机，i3-8100T、8G 内存、一块 <strong>256G 的七彩虹 SL500</strong>——也是二手的。</p>
+<p>买回来的时候我在 PE 里用 DiskGenius 扫过一次坏道，记得很清楚：大片是「良好」，不是「优秀」。当时我的理解是「良好 = 没坏，能用」。其实这个分档是按响应时间来的，「良好」的意思是<strong>这些扇区能读，但要重试才读得出来</strong>。对 SSD 来说，慢块基本等于弱页、读重试、FTL 映射表已经在吃力了。</p>
+<p>那是它给我的提前警告，我把它当成了体检合格。</p>
+<p>再叠上这几年干的活：8G 内存跑 Immich（含机器学习容器）+ PostgreSQL + Minecraft + Docker，内存一紧就 swap，而 <strong>4G swap 就在这块无 DRAM 缓存的入门盘上</strong>。Docker 的日志、Postgres 的 WAL、MC 的区块存档，全在往同一块最便宜的盘上写。这不是「运气不好」，这是拿一块消费级入门盘当数据库盘用了几个月。</p>
+<p>所以结论是：<strong>不是突然坏的，是被写死的。</strong></p>
+<h2>六、我做了什么，以及我没做什么</h2>
+<p><strong>做对的只有一件：关机。</strong> 家里人可以摸到机器，我让他们长按电源键 5 秒直接断电——没走优雅关机，因为优雅关机要读 unit、写 journal，大概率卡在 EIO 上十几分钟，最后还是得长按。而每多写一次，坏区都可能更大。</p>
+<p><strong>忍住没做的：</strong></p>
+<ul><li>没跑 <code>fsck -f</code>。文件系统级别的修复要大量重写，在一块弱块盘上等于二次伤害，而且它救不回数据，只会把坏块标记出来。</li><li>没跑 DiskGenius 的「坏道修复」。那玩意就是写测试，是把仅剩的余量烧掉。</li><li>没有反复开机「看看好没好」。每开一次都是一轮写入。</li></ul>
+<p><strong>周末回去要做的：整盘镜像，而不是拷文件。</strong></p>
+<p><code>rsync</code> 撞上一个坏块，会把整个文件重试到卡死，一个坏块能毁掉你看得见的所有好文件。正确做法是 <code>ddrescue</code> 三遍：先快速跳过坏块、再对坏块重试三次、最后反向补扫慢块。它生成一个 <code>.map</code> 文件，断电、卡死都能续跑。镜像到手之后，所有数据抢救都在镜像上做，那块盘从此只读，再也不用碰。</p>
+<pre><code class="language-bash">sudo ddrescue -f -n /dev/sda /移动硬盘/sda.img /移动硬盘/sda.map
+sudo ddrescue -f -r3 /dev/sda /移动硬盘/sda.img /移动硬盘/sda.map
+sudo ddrescue -f -R -r1 /dev/sda /移动硬盘/sda.img /移动硬盘/sda.map</code></pre>
+<h2>七、写下来是因为下次还会犯</h2>
+<p>这次的损失其实不大——那台机器上最值钱的东西是 AstrBot 的配置和聊天记录，重建一遍的成本远低于修它的成本。真正贵的是「我以为它在正常工作」这件事本身。</p>
+<p>所以列几条给自己：</p>
+<ul><li><strong>二手 SSD 到手第一件事是 <code>smartctl -a</code></strong>，看 <code>Total_LBAs_Written</code> 和 <code>Percentage_Used</code>，而不是跑坏道扫描。扫描只证明「现在读得出来」，证明不了「还能写多少」。</li><li><strong>swap 别放在系统盘</strong>，尤其别放在廉价盘上。8G 内存跑 Immich 的机器学习容器，swap 写入量比正常使用高一个数量级。</li><li><strong>数据库和相册库分开</strong>。Immich 的照片库放另一块盘，系统盘只放系统和数据库。</li><li><strong>监控要看新鲜度</strong>。页面上的数字好看不代表机器好，要看它是几点的数据。</li><li><strong>备份不是策略的替代品，但它能让你在盘死的时候只看损失，不看运气</strong>。</li></ul>
+<h2>八、最后</h2>
+<p>有点黑色幽默的是：我本来是想让 AI 有个「自己的日子」，结果它第一次真正参与我的日常，是陪我一起做故障推断——看 EIO、看 sqlite 报错、排掉内存和网络，最后得出「盘坏了，别修，救数据」。</p>
+<p>它没法替我按那个电源键，也没法替我把移动硬盘插上。但那天晚上，确实是它先把 <code>14:42</code> 这个时间点从一堆看着很正常的数字里挑出来的。</p>
+<p>机器现在已经冷着躺在家里的地板上，等周末我回去给它换块盘。至于养鱼那件事——等它有地方住了再说吧。鱼还没养上，先学会了一件事：<strong>你以为的「良好」，在硬盘行业里往往只是「还没彻底坏」的意思。</strong></p>
+
+  <p class="tags"><span>服务器</span><span>运维</span><span>SSD</span><span>AI</span><span>折腾</span></p>
+
+  <template id="blog-source">这周本来想干一件很没技术含量的事：把「养鱼」那套东西装到家里那台小主机上。
+
+所谓养鱼，就是给 AI 单独一个 B 站小号、一个 QQ 小号，让它有自己的作息——到点自己醒、刷视频、写日记，看到值得的才 @ 你。不是定时任务那种假活，是「它今天想不想看」都能自己决定的那种。项目叫 dsh-fishmate，跑在 DeepSeek Harness 上，我甚至在本地把它的面板、人设、依赖都准备好了。
+
+然后这台机器用一块二手 SSD 告诉我：想得美。
+
+## 一、出事那天
+
+流程走到第二步就卡住了。仓库 clone 完了，正要装 Node，脚本里往 `/tmp` 写一行日志：
+
+```
+/tmp/step1.sh: line 10: /tmp/ns.log: Input/output error
+```
+
+`Input/output error`。不是「没有权限」，不是「磁盘满了」，是 EIO——块设备层直接告诉你「这个扇区我读不出来」。紧接着更离谱的事发生了：连脚本自己都跑不动，`/tmp/step1.sh: error reading input file`。也就是说，不是我写坏了某个文件，是**整个文件系统读不出来了**。
+
+那一瞬间我还以为是网络问题，因为紧接着 SSH 就断了。重新连，现象很诡异：**TCP 能连上，但服务端一个字节都不发，直接断开**。
+
+## 二、排除法，一条一条排
+
+排查这东西最有意思的地方是：所有「凭直觉」的解释都是错的。
+
+**不是我的网络。** 我换了 WiFi，一样。更关键的是我从杭州那台云服务器上连（走完全独立的 WireGuard 隧道），一模一样：能建连，零字节，断开。
+
+**不是登录问题。** 连不上是在交换版本号之前就死了，跟密钥、跟密码、跟 fail2ban 都没关系——那种问题会给你一个 banner 再拒绝你。
+
+**不是过热。** 状态挂件上温度 27.8°C，CPU 0.5%，内存 29%。这数字看着比我还健康。
+
+**不是掉电重启。** `uptime` 显示 1669287 秒，19.3 天，一秒都没少。机器没重启过。
+
+**不是内存。** 这条我认真想过，因为之前买过一条二手内存是坏的。但坏内存的典型表现是随机 segfault、MCE、静默数据损坏，它造不出 EIO——EIO 是块设备在报错，是「盘」在说话。
+
+## 三、那个挂件骗了我
+
+那天最讽刺的一幕：我盯着网站上的性能挂件看，CPU 0.5%、内存 29%、温度 27.8°C，心想「这不是挺正常的吗」。
+
+后来我才反应过来去看它的时间戳：`ts: 1793716959`，也就是 **14:42:39**。而我看它的时间是 15:20。那个挂件是**二十多分钟前的快照**，负责推送数据的定时任务早就死了——它死的原因跟 sshd 一样：systemd 要 exec 脚本，而 exec 要读盘。
+
+所以「CPU 和内存都很正常」这个结论，本身就是故障的一部分。这个教训值钱：**监控数据不带新鲜度就是谎言。**
+
+## 四、拼图拼上的那一刻
+
+真正的铁证来自 QQ 机器人。它居然还能回我话：
+
+```
+刚刚在修服务器
+```
+
+然后下一句：
+
+```
+Error occurred while processing agent request: [Errno 5] Input/output error
+Error occurred while processing agent request: (sqlite3.DatabaseError) database disk image is malformed
+```
+
+`database disk image is malformed`。
+
+到这里整个图就清楚了：**已经在内存里的进程还活着**（AstrBot 在内存里，所以还能回我一句「刚刚在修服务器」），**但任何需要新读盘的操作全部失败**——sshd 每次连接都要现读 host key，读到坏块就立刻退出，所以你看到的是「连上、零字节、断开」；定时推送要 exec 脚本，起不来，所以挂件数字冻在 14:42；sqlite 读到坏页，于是报 malformed。
+
+同一个盘，不同进程踩到不同的坏块。一个还能说话，一个已经说不出话。
+
+## 五、为什么是它
+
+那台机器是台二手 NEC 的 1L 迷你主机，i3-8100T、8G 内存、一块 **256G 的七彩虹 SL500**——也是二手的。
+
+买回来的时候我在 PE 里用 DiskGenius 扫过一次坏道，记得很清楚：大片是「良好」，不是「优秀」。当时我的理解是「良好 = 没坏，能用」。其实这个分档是按响应时间来的，「良好」的意思是**这些扇区能读，但要重试才读得出来**。对 SSD 来说，慢块基本等于弱页、读重试、FTL 映射表已经在吃力了。
+
+那是它给我的提前警告，我把它当成了体检合格。
+
+再叠上这几年干的活：8G 内存跑 Immich（含机器学习容器）+ PostgreSQL + Minecraft + Docker，内存一紧就 swap，而 **4G swap 就在这块无 DRAM 缓存的入门盘上**。Docker 的日志、Postgres 的 WAL、MC 的区块存档，全在往同一块最便宜的盘上写。这不是「运气不好」，这是拿一块消费级入门盘当数据库盘用了几个月。
+
+所以结论是：**不是突然坏的，是被写死的。**
+
+## 六、我做了什么，以及我没做什么
+
+**做对的只有一件：关机。** 家里人可以摸到机器，我让他们长按电源键 5 秒直接断电——没走优雅关机，因为优雅关机要读 unit、写 journal，大概率卡在 EIO 上十几分钟，最后还是得长按。而每多写一次，坏区都可能更大。
+
+**忍住没做的：**
+
+- 没跑 `fsck -f`。文件系统级别的修复要大量重写，在一块弱块盘上等于二次伤害，而且它救不回数据，只会把坏块标记出来。
+- 没跑 DiskGenius 的「坏道修复」。那玩意就是写测试，是把仅剩的余量烧掉。
+- 没有反复开机「看看好没好」。每开一次都是一轮写入。
+
+**周末回去要做的：整盘镜像，而不是拷文件。**
+
+`rsync` 撞上一个坏块，会把整个文件重试到卡死，一个坏块能毁掉你看得见的所有好文件。正确做法是 `ddrescue` 三遍：先快速跳过坏块、再对坏块重试三次、最后反向补扫慢块。它生成一个 `.map` 文件，断电、卡死都能续跑。镜像到手之后，所有数据抢救都在镜像上做，那块盘从此只读，再也不用碰。
+
+```bash
+sudo ddrescue -f -n /dev/sda /移动硬盘/sda.img /移动硬盘/sda.map
+sudo ddrescue -f -r3 /dev/sda /移动硬盘/sda.img /移动硬盘/sda.map
+sudo ddrescue -f -R -r1 /dev/sda /移动硬盘/sda.img /移动硬盘/sda.map
+```
+
+## 七、写下来是因为下次还会犯
+
+这次的损失其实不大——那台机器上最值钱的东西是 AstrBot 的配置和聊天记录，重建一遍的成本远低于修它的成本。真正贵的是「我以为它在正常工作」这件事本身。
+
+所以列几条给自己：
+
+- **二手 SSD 到手第一件事是 `smartctl -a`**，看 `Total_LBAs_Written` 和 `Percentage_Used`，而不是跑坏道扫描。扫描只证明「现在读得出来」，证明不了「还能写多少」。
+- **swap 别放在系统盘**，尤其别放在廉价盘上。8G 内存跑 Immich 的机器学习容器，swap 写入量比正常使用高一个数量级。
+- **数据库和相册库分开**。Immich 的照片库放另一块盘，系统盘只放系统和数据库。
+- **监控要看新鲜度**。页面上的数字好看不代表机器好，要看它是几点的数据。
+- **备份不是策略的替代品，但它能让你在盘死的时候只看损失，不看运气**。
+
+## 八、最后
+
+有点黑色幽默的是：我本来是想让 AI 有个「自己的日子」，结果它第一次真正参与我的日常，是陪我一起做故障推断——看 EIO、看 sqlite 报错、排掉内存和网络，最后得出「盘坏了，别修，救数据」。
+
+它没法替我按那个电源键，也没法替我把移动硬盘插上。但那天晚上，确实是它先把 `14:42` 这个时间点从一堆看着很正常的数字里挑出来的。
+
+机器现在已经冷着躺在家里的地板上，等周末我回去给它换块盘。至于养鱼那件事——等它有地方住了再说吧。鱼还没养上，先学会了一件事：**你以为的「良好」，在硬盘行业里往往只是「还没彻底坏」的意思。**</template>
+
+</body>
+</html>
