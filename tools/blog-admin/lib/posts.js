@@ -155,6 +155,8 @@ function parsePost(html, slug) {
     .replace(/<h1[^>]*>[\s\S]*?<\/h1>/i, '')
     .replace(/<p class="date"[^>]*>[\s\S]*?<\/p>/i, '')
     .replace(/<p class="tags"[^>]*>[\s\S]*?<\/p>/i, '')
+    // 评论区属于模板，不是正文；不剥掉的话 html 模式的文章保存时会把整块吞进正文
+    .replace(/<!--\s*blog-comments:start\s*-->[\s\S]*?<!--\s*blog-comments:end\s*-->/i, '')
     .trim();
 
   return {
@@ -190,6 +192,38 @@ const BLOG_HEAD_ASSETS = [
     `H.setAttribute('data-theme',m?m[1]:(s==='light'||s==='dark')?s:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));` +
     `})(document.documentElement)</script>`,
   '<script src="/assets/js/theme.js"></script>',
+].join('\n');
+
+/**
+ * 评论区（模板的一部分，不属于文章正文）。
+ *
+ * 用成对注释把整块圈起来：parsePost() 剥离时只要匹配这一对标记，
+ * 不用写一堆脆弱的正则去认 div / script / link。
+ */
+const COMMENTS_HTML = [
+  '  <!-- blog-comments:start -->',
+  '  <section class="comments" aria-label="评论">',
+  '    <h2>评论</h2>',
+  '    <div id="comments"></div>',
+  '  </section>',
+  '  <link rel="stylesheet" href="https://artalk.carryws.xyz/dist/Artalk.css">',
+  '  <script src="https://artalk.carryws.xyz/dist/Artalk.js"></script>',
+  '  <script>',
+  '  (function () {',
+  '    if (!window.Artalk) return;',
+  '    var artalk = Artalk.init({',
+  '      el: "#comments",',
+  '      server: "https://artalk.carryws.xyz",',
+  '      site: "CarryWS",',
+  '      pageKey: location.pathname,',
+  '      darkMode: document.documentElement.getAttribute("data-theme") !== "light"',
+  '    });',
+  '    window.addEventListener("themechange", function (e) {',
+  '      artalk.setDarkMode(e.detail.theme === "dark");',
+  '    });',
+  '  })();',
+  '  </script>',
+  '  <!-- blog-comments:end -->',
 ].join('\n');
 
 /** 渲染正文（markdown 模式）或直接使用 HTML（html 模式） */
@@ -246,6 +280,7 @@ function buildPostHtml(post) {
     '',
     body,
     footer + sourceTemplate,
+    COMMENTS_HTML,
     '</body>',
     '</html>',
     '',

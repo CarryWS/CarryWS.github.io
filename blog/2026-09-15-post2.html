@@ -51,5 +51,28 @@
 
 （另外，这篇博客也是在测试蓝色大肥鱼给我服务器debug到底怎么样，能不能正常用那个博客发布功能</template>
 
+  <!-- blog-comments:start -->
+  <section class="comments" aria-label="评论">
+    <h2>评论</h2>
+    <div id="comments"></div>
+  </section>
+  <link rel="stylesheet" href="https://artalk.carryws.xyz/dist/Artalk.css">
+  <script src="https://artalk.carryws.xyz/dist/Artalk.js"></script>
+  <script>
+  (function () {
+    if (!window.Artalk) return;
+    var artalk = Artalk.init({
+      el: "#comments",
+      server: "https://artalk.carryws.xyz",
+      site: "CarryWS",
+      pageKey: location.pathname,
+      darkMode: document.documentElement.getAttribute("data-theme") !== "light"
+    });
+    window.addEventListener("themechange", function (e) {
+      artalk.setDarkMode(e.detail.theme === "dark");
+    });
+  })();
+  </script>
+  <!-- blog-comments:end -->
 </body>
 </html>

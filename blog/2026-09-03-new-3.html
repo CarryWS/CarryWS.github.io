@@ -25,5 +25,28 @@
 
 <p>啊啊啊明天就开学了啊啊啊</p>
 
+  <!-- blog-comments:start -->
+  <section class="comments" aria-label="评论">
+    <h2>评论</h2>
+    <div id="comments"></div>
+  </section>
+  <link rel="stylesheet" href="https://artalk.carryws.xyz/dist/Artalk.css">
+  <script src="https://artalk.carryws.xyz/dist/Artalk.js"></script>
+  <script>
+  (function () {
+    if (!window.Artalk) return;
+    var artalk = Artalk.init({
+      el: "#comments",
+      server: "https://artalk.carryws.xyz",
+      site: "CarryWS",
+      pageKey: location.pathname,
+      darkMode: document.documentElement.getAttribute("data-theme") !== "light"
+    });
+    window.addEventListener("themechange", function (e) {
+      artalk.setDarkMode(e.detail.theme === "dark");
+    });
+  })();
+  </script>
+  <!-- blog-comments:end -->
 </body>
 </html>

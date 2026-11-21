@@ -65,5 +65,28 @@
 最后呢，我搞了WireGuard虚拟组网（扫描器我看你能扫出来是哪个端口不？），把frp彻底关了，问题就基本解决了。
 所以说，网络安全真的很重要，大部分没有意识到，但只要来上这么一次像这样的经历，你就立马知道了。</template>
 
+  <!-- blog-comments:start -->
+  <section class="comments" aria-label="评论">
+    <h2>评论</h2>
+    <div id="comments"></div>
+  </section>
+  <link rel="stylesheet" href="https://artalk.carryws.xyz/dist/Artalk.css">
+  <script src="https://artalk.carryws.xyz/dist/Artalk.js"></script>
+  <script>
+  (function () {
+    if (!window.Artalk) return;
+    var artalk = Artalk.init({
+      el: "#comments",
+      server: "https://artalk.carryws.xyz",
+      site: "CarryWS",
+      pageKey: location.pathname,
+      darkMode: document.documentElement.getAttribute("data-theme") !== "light"
+    });
+    window.addEventListener("themechange", function (e) {
+      artalk.setDarkMode(e.detail.theme === "dark");
+    });
+  })();
+  </script>
+  <!-- blog-comments:end -->
 </body>
 </html>

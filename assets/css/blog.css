@@ -221,3 +221,22 @@ h1 + .search { margin-top: 14px; }
   body { padding: 48px 16px; }
   h1 { font-size: 22px; }
 }
+
+/* ---------------------------------------------------------------- 评论区 */
+.comments {
+  margin-top: 56px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.comments h2 {
+  margin: 0 0 18px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--fg-strong);
+  text-transform: uppercase;
+}
+
+/* Artalk 自带一套变量，跟站点 token 对齐一下，浅色下才不会突兀 */
+.comments { --atk-color-primary: var(--accent); }

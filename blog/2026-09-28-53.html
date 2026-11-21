@@ -350,5 +350,28 @@ frp 那个源 IP 丢失的问题，不查日志根本发现不了。它不影响
 
 （顺便，这次把一个正在被境外 IP 爆破的暴露面彻底干掉了 —— 从&quot;看不见&quot;变成&quot;不存在&quot;，比从&quot;看不见&quot;变成&quot;看得见&quot;有用得多。）</template>
 
+  <!-- blog-comments:start -->
+  <section class="comments" aria-label="评论">
+    <h2>评论</h2>
+    <div id="comments"></div>
+  </section>
+  <link rel="stylesheet" href="https://artalk.carryws.xyz/dist/Artalk.css">
+  <script src="https://artalk.carryws.xyz/dist/Artalk.js"></script>
+  <script>
+  (function () {
+    if (!window.Artalk) return;
+    var artalk = Artalk.init({
+      el: "#comments",
+      server: "https://artalk.carryws.xyz",
+      site: "CarryWS",
+      pageKey: location.pathname,
+      darkMode: document.documentElement.getAttribute("data-theme") !== "light"
+    });
+    window.addEventListener("themechange", function (e) {
+      artalk.setDarkMode(e.detail.theme === "dark");
+    });
+  })();
+  </script>
+  <!-- blog-comments:end -->
 </body>
 </html>

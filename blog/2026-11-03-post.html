@@ -191,5 +191,28 @@ sudo ddrescue -f -R -r1 /dev/sda /移动硬盘/sda.img /移动硬盘/sda.map
 
 机器现在已经冷着躺在家里的地板上，等周末我回去给它换块盘。至于养鱼那件事——等它有地方住了再说吧。鱼还没养上，先学会了一件事：**你以为的「良好」，在硬盘行业里往往只是「还没彻底坏」的意思。**</template>
 
+  <!-- blog-comments:start -->
+  <section class="comments" aria-label="评论">
+    <h2>评论</h2>
+    <div id="comments"></div>
+  </section>
+  <link rel="stylesheet" href="https://artalk.carryws.xyz/dist/Artalk.css">
+  <script src="https://artalk.carryws.xyz/dist/Artalk.js"></script>
+  <script>
+  (function () {
+    if (!window.Artalk) return;
+    var artalk = Artalk.init({
+      el: "#comments",
+      server: "https://artalk.carryws.xyz",
+      site: "CarryWS",
+      pageKey: location.pathname,
+      darkMode: document.documentElement.getAttribute("data-theme") !== "light"
+    });
+    window.addEventListener("themechange", function (e) {
+      artalk.setDarkMode(e.detail.theme === "dark");
+    });
+  })();
+  </script>
+  <!-- blog-comments:end -->
 </body>
 </html>
