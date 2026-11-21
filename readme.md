@@ -1,5 +1,7 @@
-个人主页，使用github pages部署
-由于本人已经在使用 https://carryws.xyz 域名，本仓库现只做文件托管，不再推荐使用 https://carryws.github.io 查看主页
+# CarryWS的个人主页源码仓库
+个人主页，使用github pages部署（最早是这样）
+不过现在有了自己的域名：https://carryws.xyz，所以本仓库的GitHub Pages部署没用了，会根据CNAME自动跳转至该域名。
+本仓库尽量保持版本与该域名的版本相同。（不过我有时也会忘了git push）
 ## 写博客
 
 博客文章放在 `blog/`，列表页是 `blog.html`。用自带的本地后台来写：
