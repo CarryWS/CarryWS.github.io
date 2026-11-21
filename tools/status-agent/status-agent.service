@@ -1,0 +1,21 @@
+[Unit]
+Description=CarryWS status agent (host metrics + Minecraft -> carryws.xyz)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=carryws
+Group=carryws
+EnvironmentFile=/etc/status-push.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -u /opt/status-push/agent.py
+Restart=always
+RestartSec=10
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target
