@@ -194,6 +194,12 @@ const BLOG_HEAD_ASSETS = [
   '<script src="/assets/js/theme.js"></script>',
 ].join('\n');
 
+/** 看板娘：站内统一插在每个页面 </body> 前，资源在 /assets/live2d/ */
+const LIVE2D_SNIPPET = [
+  '  <!-- Live2D 看板娘（资源与配置见 /assets/live2d/） -->',
+  '  <script src="/assets/live2d/autoload.js"></script>',
+].join('\n');
+
 /**
  * 评论区（模板的一部分，不属于文章正文）。
  *
@@ -223,6 +229,7 @@ const COMMENTS_HTML = [
   '    });',
   '  })();',
   '  </script>',
+  LIVE2D_SNIPPET,
   '  <!-- blog-comments:end -->',
 ].join('\n');
 
@@ -519,6 +526,7 @@ ${body}
     input.addEventListener('input', apply);
   })();
 </script>
+${LIVE2D_SNIPPET}
 </body>
 </html>
 `;

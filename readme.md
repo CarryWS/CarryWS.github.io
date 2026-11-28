@@ -15,3 +15,17 @@
 
 命令行版本：`node tools/blog-admin/cli.js list|new|delete|build`。
 详细说明见 [tools/blog-admin/README.md](tools/blog-admin/README.md)。
+
+## 看板娘
+
+页面左下角（服务器状态面板上方）的 Live2D 看板娘来自 [live2d-widget](https://github.com/stevenjoezhang/live2d-widget)，
+资源放在 `assets/live2d/`，所有页面的 `</body>` 前引入同一行：
+
+```html
+<script src="/assets/live2d/autoload.js"></script>
+```
+
+- 模型、工具栏、拖动等配置在 `assets/live2d/autoload.js`；
+- 外观、左下角定位、深浅色适配在 `assets/live2d/waifu.css` 末尾的「CarryWS 站点适配」段；
+- 博客文章页由 `tools/blog-admin/lib/posts.js` 生成，模板已包含这行脚本，新建文章会自动带上；
+- 屏幕宽度小于 768px 时不加载，避免挡住手机上的正文。
